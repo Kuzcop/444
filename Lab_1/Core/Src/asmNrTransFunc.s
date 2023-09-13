@@ -25,13 +25,12 @@
  */
  asmTransFunc:
 	VMOV.f32 S1, #0.5	// S1 is the initial guess
+	VMOV.f32 S7, #0.5 	// S7 holds the intermediate solution
+	VMOV.f32 S8, #0.1 //tolerance value
 	VLDR.f32 S2, [R1]	// S2 is omega
 	VLDR.f32 S3, [R2]	// S3 is phi
-	MOV R1, #10			// R1 is the counter
 
 Loop:
-	CMP R1, #0
-  	BEQ		done
 
   	VMOV.f32 S4, S3		//Copy phi into S4
   	VMLA.f32 S4, S1, S2 //S2*S1 + S4 -> S4, holds theta angle for both cos and sine
@@ -55,11 +54,25 @@ Loop:
 
 	VDIV.f32 S4, S5, S4 //Numerator/Denominator
 
-	VSUB.f32 S1, S1, S4
+	VSUB.f32 S7, S1, S4 //x1 = x0 - f/fprime
+	VSUB.f32 S5, S7, S1 // x1 - x0
+	VCMP.f32 S5, #0.0
+	VMRS APSR_nzvc, FPSCR	// load the FP PSR to branch using FP conditions
+	BGT tol
 
-	SUBS	R1, R1, #1	// Decrement counter
+	VNEG.f32 S5, S5 //negate if difference is negative
 
-  	B Loop
+tol:
+
+	VCMP.f32 S5, S8 //compare difference to tolerance
+
+	VMRS APSR_nzvc, FPSCR
+
+	BLE done// if difference less than tolerance break
+
+	VMOV.f32 S1, S7
+
+	B Loop
 
 done:
 	VSTR.f32 S1, [R0]

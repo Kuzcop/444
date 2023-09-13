@@ -15,10 +15,17 @@ void square_root(float *x){
     }
     else{
     	float x_o = 1;   // Initialize guess to 1
-    	uint32_t len = 10;
-        for(uint32_t i = 0; i < len; i++){
-            x_o = x_o - (x_o*x_o - (*x))/(2*x_o);
-        }
-        (*x) = x_o;
+    	float x_1 = 1;
+    	float tolerance = 0.00001;
+    	uint32_t iter = 0;
+    	while(1){
+    		x_1 = x_o - (x_o*x_o - (*x))/(2*x_o);
+    		if (fabs(x_1 - x_o) < tolerance){
+    			(*x) = x_o;
+    			break;
+    		}
+    		x_o = x_1;
+    		iter++;
+    	}
     }
 }

@@ -10,11 +10,22 @@
 #include "main.h"
 
 void trans_func(float *x, float *omega, float *phi){
-    float x_o = 0.5;   // Initialize guess to 1
-	uint32_t len = 10;
-	for(uint32_t i = 0; i < len; i++){
-		x_o = x_o - (x_o*x_o - arm_cos_f32((*omega)*(x_o) + (*phi))) / (2*x_o + (*omega) * arm_sin_f32((*omega)*(x_o) + (*phi)));
+    float x_o = 0.48;   // Initialize guess to 1
+    float x_1 = 0.5;
+    float f_prime = -1;
+    float tolerance = 0.0001;
+    float epsilon = 0.1;
+    uint32_t iter = 0;
+	while(1){
+		f_prime = 2*x_o + (*omega) * arm_sin_f32((*omega)*(x_o) + (*phi));
+		x_1 = x_o - (x_o*x_o - arm_cos_f32((*omega)*(x_o) + (*phi))) / f_prime;
+		if (fabs(x_1 - x_o) <= tolerance || fabs(f_prime) < epsilon){
+			(*x) = x_o;
+			break;
+		}
+		x_o = x_1;
+		iter++;
 	}
-	(*x) = x_o;
+
 }
 

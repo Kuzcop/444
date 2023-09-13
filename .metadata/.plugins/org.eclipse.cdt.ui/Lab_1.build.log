@@ -1,0 +1,10 @@
+16:04:53 **** Incremental Build of configuration Debug for project Lab_1 ****
+make -j12 all 
+arm-none-eabi-gcc -mcpu=cortex-m4 -g3 -DDEBUG -c -x assembler-with-cpp -MMD -MP -MF"Core/Src/asmNrTransFunc.d" -MT"Core/Src/asmNrTransFunc.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/asmNrTransFunc.o" "../Core/Src/asmNrTransFunc.s"
+../Core/Src/asmNrTransFunc.s: Assembler messages:
+../Core/Src/asmNrTransFunc.s:29: Error: garbage following instruction -- `vmov.f32 S8,#0.1'
+make: *** [Core/Src/subdir.mk:56: Core/Src/asmNrTransFunc.o] Error 1
+"make -j12 all" terminated with exit code 2. Build might be incomplete.
+
+16:04:55 Build Failed. 2 errors, 0 warnings. (took 2s.420ms)
+
