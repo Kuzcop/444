@@ -1,7 +1,49 @@
-16:04:53 **** Incremental Build of configuration Debug for project Lab_1 ****
+16:06:51 **** Incremental Build of configuration Debug for project Lab_1 ****
+make -j12 all 
+arm-none-eabi-gcc -Og "../Core/Src/nrTransFunc.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L4S5xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/nrTransFunc.d" -MT"Core/Src/nrTransFunc.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/nrTransFunc.o"
+arm-none-eabi-gcc -o "Lab_1.elf" @"objects.list"  -larm_cortexM4lf_math -mcpu=cortex-m4 -T"C:\Users\Admin\OneDrive\Documents\GitHub\444\Lab_1\STM32L4S5VITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Lab_1.map" -Wl,--gc-sections -static -L"C:\Users\Admin\OneDrive\Documents\GitHub\444\Lab_1\Core\Lib" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: Lab_1.elf
+ 
+arm-none-eabi-size   Lab_1.elf 
+arm-none-eabi-objdump -h -S  Lab_1.elf  > "Lab_1.list"
+   text	   data	    bss	    dec	    hex	filename
+   8360	     20	   1572	   9952	   26e0	Lab_1.elf
+Finished building: default.size.stdout
+ 
+Finished building: Lab_1.list
+ 
+16:06:58 **** Incremental Build of configuration Debug for project Lab_1 ****
+make -j12 all 
+arm-none-eabi-size   Lab_1.elf 
+   text	   data	    bss	    dec	    hex	filename
+   8360	     20	   1572	   9952	   26e0	Lab_1.elf
+Finished building: default.size.stdout
+ 
+16:07:37 **** Incremental Build of configuration Debug for project Lab_1 ****
+make -j12 all 
+arm-none-eabi-gcc -Og "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L4S5xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "Lab_1.elf" @"objects.list"  -larm_cortexM4lf_math -mcpu=cortex-m4 -T"C:\Users\Admin\OneDrive\Documents\GitHub\444\Lab_1\STM32L4S5VITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Lab_1.map" -Wl,--gc-sections -static -L"C:\Users\Admin\OneDrive\Documents\GitHub\444\Lab_1\Core\Lib" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: Lab_1.elf
+ 
+arm-none-eabi-size   Lab_1.elf 
+arm-none-eabi-objdump -h -S  Lab_1.elf  > "Lab_1.list"
+   text	   data	    bss	    dec	    hex	filename
+   8240	     20	   1572	   9832	   2668	Lab_1.elf
+Finished building: default.size.stdout
+ 
+Finished building: Lab_1.list
+ 
+16:08:29 **** Incremental Build of configuration Debug for project Lab_1 ****
 make -j12 all 
 arm-none-eabi-gcc -mcpu=cortex-m4 -g3 -DDEBUG -c -x assembler-with-cpp -MMD -MP -MF"Core/Src/asmNrTransFunc.d" -MT"Core/Src/asmNrTransFunc.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/asmNrTransFunc.o" "../Core/Src/asmNrTransFunc.s"
-../Core/Src/asmNrTransFunc.s: Assembler messages:
-../Core/Src/asmNrTransFunc.s:29: Error: garbage following instruction -- `vmov.f32 S8,#0.1'
-make: *** [Core/Src/subdir.mk:56: Core/Src/asmNrTransFunc.o] Error 1
-"make -j12 all" terminated with exit code 2. Build might be incomplete.
+arm-none-eabi-gcc -o "Lab_1.elf" @"objects.list"  -larm_cortexM4lf_math -mcpu=cortex-m4 -T"C:\Users\Admin\OneDrive\Documents\GitHub\444\Lab_1\STM32L4S5VITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Lab_1.map" -Wl,--gc-sections -static -L"C:\Users\Admin\OneDrive\Documents\GitHub\444\Lab_1\Core\Lib" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: Lab_1.elf
+ 
+arm-none-eabi-size   Lab_1.elf 
+arm-none-eabi-objdump -h -S  Lab_1.elf  > "Lab_1.list"
+   text	   data	    bss	    dec	    hex	filename
+   8240	     20	   1572	   9832	   2668	Lab_1.elf
+Finished building: default.size.stdout
+ 
+Finished building: Lab_1.list
+ 

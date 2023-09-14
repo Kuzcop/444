@@ -10,10 +10,10 @@
 #include "main.h"
 
 void trans_func(float *x, float *omega, float *phi){
-    float x_o = 0.48;   // Initialize guess to 1
+    float x_o = 0.1;   // Initialize guess to 1
     float x_1 = 0.5;
     float f_prime = -1;
-    float tolerance = 0.0001;
+    float tolerance = 0.000001;
     float epsilon = 0.1;
     uint32_t iter = 0;
 	while(1){

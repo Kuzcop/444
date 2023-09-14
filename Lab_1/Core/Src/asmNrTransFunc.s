@@ -24,11 +24,20 @@
  * R2 = pointer to phi parameter
  */
  asmTransFunc:
-	VMOV.f32 S1, #0.5	// S1 is the initial guess
+	VMOV.f32 S1, #0.25	// S1 is the initial guess
 	VMOV.f32 S7, #0.5 	// S7 holds the intermediate solution
-	VMOV.f32 S8, #0.1 //tolerance value
+	VMOV.f32 S8, #10.0
+	VMOV.f32 S9, #1.0	// will hold the tolerance value
 	VLDR.f32 S2, [R1]	// S2 is omega
 	VLDR.f32 S3, [R2]	// S3 is phi
+	MOV R3, #6
+
+Mult_iter:				// loop through dividing 1 by 10 six times
+	CMP R3, #0
+	BEQ Loop
+	VDIV.f32 S9, S9, S8
+	SUB R3, R3, #1
+	B Mult_iter
 
 Loop:
 
@@ -64,14 +73,10 @@ Loop:
 
 tol:
 
-	VCMP.f32 S5, S8 //compare difference to tolerance
-
+	VCMP.f32 S5, S9 //compare difference to tolerance
 	VMRS APSR_nzvc, FPSCR
-
 	BLE done// if difference less than tolerance break
-
 	VMOV.f32 S1, S7
-
 	B Loop
 
 done:

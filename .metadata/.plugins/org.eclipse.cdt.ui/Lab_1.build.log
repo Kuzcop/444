@@ -1,10 +1,17 @@
-16:04:53 **** Incremental Build of configuration Debug for project Lab_1 ****
+16:08:29 **** Incremental Build of configuration Debug for project Lab_1 ****
 make -j12 all 
 arm-none-eabi-gcc -mcpu=cortex-m4 -g3 -DDEBUG -c -x assembler-with-cpp -MMD -MP -MF"Core/Src/asmNrTransFunc.d" -MT"Core/Src/asmNrTransFunc.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/asmNrTransFunc.o" "../Core/Src/asmNrTransFunc.s"
-../Core/Src/asmNrTransFunc.s: Assembler messages:
-../Core/Src/asmNrTransFunc.s:29: Error: garbage following instruction -- `vmov.f32 S8,#0.1'
-make: *** [Core/Src/subdir.mk:56: Core/Src/asmNrTransFunc.o] Error 1
-"make -j12 all" terminated with exit code 2. Build might be incomplete.
+arm-none-eabi-gcc -o "Lab_1.elf" @"objects.list"  -larm_cortexM4lf_math -mcpu=cortex-m4 -T"C:\Users\Admin\OneDrive\Documents\GitHub\444\Lab_1\STM32L4S5VITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Lab_1.map" -Wl,--gc-sections -static -L"C:\Users\Admin\OneDrive\Documents\GitHub\444\Lab_1\Core\Lib" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: Lab_1.elf
+ 
+arm-none-eabi-size   Lab_1.elf 
+arm-none-eabi-objdump -h -S  Lab_1.elf  > "Lab_1.list"
+   text	   data	    bss	    dec	    hex	filename
+   8240	     20	   1572	   9832	   2668	Lab_1.elf
+Finished building: default.size.stdout
+ 
+Finished building: Lab_1.list
+ 
 
-16:04:55 Build Failed. 2 errors, 0 warnings. (took 2s.420ms)
+16:08:31 Build Finished. 0 errors, 0 warnings. (took 2s.427ms)
 
