@@ -10,8 +10,7 @@
 #include "main.h"
 
 void trans_func(float *x, float *omega, float *phi){
-    float x_o = 0.1;   // Initialize guess to 1
-    float x_1 = 0.5;
+    float x_o, x_1= 0.5;   // Initialize guess to 1
     float f_prime = -1;
     float tolerance = 0.000001;
     float epsilon = 0.1;
@@ -19,8 +18,13 @@ void trans_func(float *x, float *omega, float *phi){
 	while(1){
 		f_prime = 2*x_o + (*omega) * arm_sin_f32((*omega)*(x_o) + (*phi));
 		x_1 = x_o - (x_o*x_o - arm_cos_f32((*omega)*(x_o) + (*phi))) / f_prime;
-		if (fabs(x_1 - x_o) <= tolerance || fabs(f_prime) < epsilon){
+		if (fabs(x_1 - x_o) <= tolerance){
 			(*x) = x_o;
+			break;
+		}
+
+		if(fabs(f_prime) < epsilon){
+			(*x) = tolerance;
 			break;
 		}
 		x_o = x_1;

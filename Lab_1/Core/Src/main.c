@@ -95,8 +95,8 @@ int main(void)
   // the max is 88.49 at index 5
   //float array[10] = {48.21, 79.48, 24.27, 28.82, 78.24, 88.49, 31.19, 5.52, 82.70, 77.73};
   float x;
-  float omega = 4;
-  float phi = 11;
+  float omega = 2;
+  float phi = 1;
 
   /* USER CODE END 2 */
 
@@ -117,12 +117,12 @@ int main(void)
 		//---------------------------
 		// Square Root
 		//square_root(&x);
-		//asmSquareRoot(&x);
+		asmSquareRoot(&x);
 		//arm_sqrt_f32(x, &x);
 		//---------------------------
 		// Transcendental Functions
 		//trans_func(&x, &omega, &phi);
-		asmTransFunc(&x, &omega, &phi);
+		//asmTransFunc(&x, &omega, &phi);
 
 	}
 

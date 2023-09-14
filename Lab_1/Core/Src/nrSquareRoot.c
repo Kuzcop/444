@@ -16,14 +16,23 @@ void square_root(float *x){
     else{
     	float x_o = 1;   // Initialize guess to 1
     	float x_1 = 1;
-    	float tolerance = 0.00001;
+    	float f_prime = -1;
+    	float tolerance = 0.000001;
+    	float epsilon = 0.1;
     	uint32_t iter = 0;
     	while(1){
-    		x_1 = x_o - (x_o*x_o - (*x))/(2*x_o);
+    		f_prime = (2*x_o);
+    		x_1 = x_o - (x_o*x_o - (*x))/f_prime;
     		if (fabs(x_1 - x_o) < tolerance){
     			(*x) = x_o;
     			break;
     		}
+
+    		if(fabs(f_prime) < epsilon){
+    			(*x) = tolerance;
+    			break;
+    		}
+
     		x_o = x_1;
     		iter++;
     	}
