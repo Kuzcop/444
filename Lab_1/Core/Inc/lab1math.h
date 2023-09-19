@@ -20,5 +20,6 @@ void trans_func(float *x, float *omega, float *phi);
 
 extern void asmTransFunc(float *x, float *omega, float *phi);
 
+extern void asmTransFunc2(float *x, float *omega, float *phi);
 
 #endif /* INC_LAB1MATH_H_ */

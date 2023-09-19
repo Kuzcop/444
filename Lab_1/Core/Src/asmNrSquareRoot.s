@@ -24,6 +24,11 @@
 
  asmSquareRoot:
  	VLDR.f32 S0, [R0]
- 	VSQRT.f32 S0, S0
+ 	VCMP.f32 S0, #0.0
+ 	VMRS APSR_nzvc, FPSCR
+ 	ITE GT
+ 	VSQRTGT.f32 S0, S0
+ 	VMOVLE.f32 S0, #-1
  	VSTR.f32 S0, [R0]
  	BX LR
+

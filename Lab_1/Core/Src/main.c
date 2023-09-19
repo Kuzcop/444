@@ -95,8 +95,8 @@ int main(void)
   // the max is 88.49 at index 5
   //float array[10] = {48.21, 79.48, 24.27, 28.82, 78.24, 88.49, 31.19, 5.52, 82.70, 77.73};
   float x;
-  float omega = 2;
-  float phi = 1;
+  float omega = 1.6;
+  float phi = 1.5;
 
   /* USER CODE END 2 */
 
@@ -109,20 +109,25 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	ITM_Port32(31) = 1;
 	for (uint32_t i=0; i<1000; i++){
-		x = 25;
+		x = 15;
 		// Example cMax
 		//cMax(&array, 10, &max, &maxIndex);
 		//asmMax(&array, 10, &max, &maxIndex);
 		//arm_max_f32(&array, 10, &max, &maxIndex);
 		//---------------------------
-		// Square Root
+		//Square Root
 		//square_root(&x);
-		asmSquareRoot(&x);
+
+		//x = 15;
+		//asmSquareRoot(&x);
+
+		//x = 15;
 		//arm_sqrt_f32(x, &x);
 		//---------------------------
 		// Transcendental Functions
 		//trans_func(&x, &omega, &phi);
-		//asmTransFunc(&x, &omega, &phi);
+		asmTransFunc(&x, &omega, &phi);
+		asmTransFunc2(&x, &omega, &phi);
 
 	}
 

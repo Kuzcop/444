@@ -1,5 +1,6 @@
 "./Core/Src/asmNrSquareRoot.o"
 "./Core/Src/asmNrTransFunc.o"
+"./Core/Src/asmNrTransFunc2.o"
 "./Core/Src/asmmax.o"
 "./Core/Src/cmax.o"
 "./Core/Src/main.o"
