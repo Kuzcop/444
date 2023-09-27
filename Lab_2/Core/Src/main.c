@@ -38,6 +38,7 @@
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 #define VALUE_LIMIT 200
+#define N_STEPS 50
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -104,8 +105,9 @@ int main(void)
   uint8_t saw = 0;
   uint8_t sine = (VALUE_LIMIT/2);
   float   theta = 0.0;
-  uint8_t delta = 40;
-  uint8_t n_step = 10;
+  uint8_t delta = (VALUE_LIMIT/N_STEPS)*2;
+  uint32_t tempSensor = 0;
+  uint32_t vref = 0;
 
   /* USER CODE END 2 */
 
@@ -121,11 +123,27 @@ int main(void)
 	 do_triangle(&triangle, &delta);
 	 do_sine(&sine, &theta);
 
-	 HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, (uint32_t)(sine));
-	 HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_2, DAC_ALIGN_8B_R, (uint32_t)(saw));
+	 HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, (uint32_t)(triangle));
+	 //HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_2, DAC_ALIGN_8B_R, (uint32_t)(saw));
+
+	 HAL_ADCEx_InjectedStart(&hadc1);
+	 HAL_ADCEx_InjectedPollForConversion(&hadc1, 200);
+	 tempSensor = HAL_ADCEx_InjectedGetValue($hadc1, 1);
+
+	 HAL_ADCEx_InjectedStart(&hadc1);
+	 HAL_ADCEx_InjectedPollForConversion(&hadc1, 200);
+	 vref = HAL_ADCEx_InjectedGetValue($hadc1, 1);
 
 
-	 HAL_Delay(15/n_step);
+
+
+	 uint32_t i;
+	 ITM_Port32(31) = 1;
+	 for (i = 0 ; i < 100; i ++){
+	 }
+	 ITM_Port32(31) = 2;
+
+	 //HAL_Delay(1);
   }
   /* USER CODE END 3 */
 }
@@ -353,7 +371,7 @@ void do_saw(uint8_t *saw_value){
 		(*saw_value) = 0;
 	}
 	else{
-		(*saw_value) += 20;
+		(*saw_value) += VALUE_LIMIT/N_STEPS;
 	}
 }
 
@@ -361,15 +379,12 @@ void do_triangle(uint8_t *triangle_value, uint8_t *delta){
 
 	(*triangle_value) += (*delta);
 
-	if( ((*triangle_value) == VALUE_LIMIT) || ((*triangle_value) == 0)) (*delta) *= -1;
+	if( ((*triangle_value) >= VALUE_LIMIT) || ((*triangle_value) <= 0)) (*delta) *= -1;
 }
 
 void do_sine(uint8_t *sine_value, float *theta){
-	uint32_t temp = 0; // TODO: Remove later
-
-	(*theta) += (2*PI)/(10);
+	(*theta) += (2*PI)/(N_STEPS);
 	if( (*theta) >= 2*PI ) (*theta) = 0;
-	temp = ((VALUE_LIMIT/2.0)*arm_sin_f32((*theta)) + (VALUE_LIMIT/2.0));
 	(*sine_value) = (uint8_t)((VALUE_LIMIT/2.0)*arm_sin_f32((*theta)) + (VALUE_LIMIT/2.0));
 }
 /* USER CODE END 4 */
