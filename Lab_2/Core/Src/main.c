@@ -60,6 +60,7 @@ void PB_LED(void);
 void do_saw(uint8_t *saw_value);
 void do_triangle(uint8_t *triangle_value, uint8_t *delta);
 void do_sine(uint8_t *sine_value, float *theta);
+float scale_temp(uint32_t temp_value, uint32_t vref_value);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -128,13 +129,13 @@ int main(void)
 
 	 HAL_ADCEx_InjectedStart(&hadc1);
 	 HAL_ADCEx_InjectedPollForConversion(&hadc1, 200);
-	 tempSensor = HAL_ADCEx_InjectedGetValue($hadc1, 1);
+	 tempSensor = HAL_ADCEx_InjectedGetValue(&hadc1, 1);
 
 	 HAL_ADCEx_InjectedStart(&hadc1);
 	 HAL_ADCEx_InjectedPollForConversion(&hadc1, 200);
-	 vref = HAL_ADCEx_InjectedGetValue($hadc1, 1);
+	 vref = HAL_ADCEx_InjectedGetValue(&hadc1, 1);
 
-
+	 HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (uint32_t)scale_temp(tempSensor, vref));
 
 
 	 uint32_t i;
@@ -386,6 +387,23 @@ void do_sine(uint8_t *sine_value, float *theta){
 	(*theta) += (2*PI)/(N_STEPS);
 	if( (*theta) >= 2*PI ) (*theta) = 0;
 	(*sine_value) = (uint8_t)((VALUE_LIMIT/2.0)*arm_sin_f32((*theta)) + (VALUE_LIMIT/2.0));
+}
+
+float scale_temp(uint32_t temp_value, uint32_t vref_value){
+	float temp1 = TEMPSENSOR_CAL1_TEMP;
+	float temp2 = TEMPSENSOR_CAL2_TEMP;
+	float cal1 = (float) *TEMPSENSOR_CAL1_ADDR;
+	float cal2 = (float) *TEMPSENSOR_CAL2_ADDR;
+	float vref1 = VREFINT_CAL_VREF;
+	float vcal = (float) *VREFINT_CAL_ADDR;
+
+	float v_correct;
+	float temp_correct;
+
+	v_correct = vref1*vcal/((float)vref_value);
+	temp_correct = ((temp2 - temp1)/(cal2 - cal1))*((float)temp_value*v_correct/vref1 - cal1) + 30;
+
+	return temp_correct;
 }
 /* USER CODE END 4 */
 
