@@ -111,7 +111,7 @@ int main(void)
   float temp = 0;
   uint8_t song_index = 0;
   uint8_t song_index_background = 0;
-  uint8_t update_song  = 0;
+  uint8_t update_song  = 1;
   uint8_t led_switch = 0;
 
   /* USER CODE END 2 */
@@ -176,7 +176,7 @@ int main(void)
 	   	 break;
 	   default:
 		   get_temp(&temp);
-		   HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, (uint32_t)(temp));
+		   HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, (uint32_t)(temp*100));
 	 }
 
 
