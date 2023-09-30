@@ -61,6 +61,7 @@ void do_saw(uint8_t *saw_value);
 void do_triangle(uint8_t *triangle_value, uint8_t *delta);
 void do_sine(uint8_t *sine_value, float *theta);
 float scale_temp(uint32_t temp_value, uint32_t vref_value);
+uint32_t get_temp(float *temp);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -107,10 +108,11 @@ int main(void)
   uint8_t sine = (VALUE_LIMIT/2);
   float   theta = 0.0;
   uint8_t delta = (VALUE_LIMIT/N_STEPS)*2;
-  uint32_t tempSensor = 0;
-  uint32_t vref = 0;
-  float tempVal = 0.0;
-
+  float temp = 0;
+  uint8_t song_index = 0;
+  uint8_t song_index_background = 0;
+  uint8_t update_song  = 0;
+  uint8_t led_switch = 0;
 
   /* USER CODE END 2 */
 
@@ -122,55 +124,67 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	 PB_LED();
+	 //Part 1
+//	 PB_LED();
+
+	 //Part 2
+//	  do_saw(&saw);
+//	  do_triangle(&triangle, &delta);
+//	  do_sine(&sine, &theta);
+//	  HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, (uint32_t)(triangle));
+//	  HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_2, DAC_ALIGN_8B_R, (uint32_t)(saw));
+
+	  //Part 3
+
+//	  get_temp(&temp);
+
+	  //Part 4
+
+	 while (HAL_GPIO_ReadPin(PB_GPIO_Port, PB_Pin) == GPIO_PIN_RESET){
+		 if (HAL_GPIO_ReadPin(LED_GPIO_Port, LED_Pin) == GPIO_PIN_RESET){
+			 led_switch = 1;
+			 song_index = 3;
+		 }
+		 else{
+			 led_switch = 0;
+			 update_song = 1;
+		 }
+
+	 }
+
+	 if (update_song == 1){
+		 song_index = song_index_background;
+		 song_index_background = (song_index_background + 1) % 3;
+		 update_song = 0;
+	 }
+
+	 HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, led_switch);
+
 	 do_saw(&saw);
 	 do_triangle(&triangle, &delta);
 	 do_sine(&sine, &theta);
 
-	 HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, (uint32_t)(triangle));
-	 //HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_2, DAC_ALIGN_8B_R, (uint32_t)(saw));
+	 switch(song_index) {
+	   case 0:
+		   HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, (uint32_t)(saw));
+	     break;
+	   case 1:
+		   HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, (uint32_t)(triangle));
+	     break;
+	   case 2:
+		   HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, (uint32_t)(sine));
+	   	 break;
+	   default:
+		   get_temp(&temp);
+		   HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, (uint32_t)(temp));
+	 }
 
-	 uint32_t i;
+
 	 ITM_Port32(31) = 1;
-	 for (i = 0 ; i < 100; i ++){
+	 for (uint32_t i = 0 ; i < 100; i ++){
 	 }
 	 ITM_Port32(31) = 2;
 
-
-	  ADC_ChannelConfTypeDef channel_config = {.Channel = ADC_CHANNEL_VREFINT,
-	  .Rank = ADC_REGULAR_RANK_1,
-	  .SamplingTime = ADC_SAMPLETIME_640CYCLES_5,
-	  .SingleDiff = ADC_SINGLE_ENDED,
-	  .OffsetNumber = ADC_OFFSET_NONE,
-	  .Offset = 0};
-
-	 if (HAL_ADC_ConfigChannel(&hadc1, &channel_config) != HAL_OK){
-		 return -1;
-	 }
-
-	 HAL_ADC_Start(&hadc1);
-	 HAL_ADC_PollForConversion(&hadc1, 200);
-	 vref = HAL_ADC_GetValue(&hadc1);
-	 HAL_ADC_Stop(&hadc1);
-
-
-	 ADC_ChannelConfTypeDef channel_config_2 = {.Channel = ADC_CHANNEL_TEMPSENSOR,
-	 	  .Rank = ADC_REGULAR_RANK_1,
-	 	  .SamplingTime = ADC_SAMPLETIME_640CYCLES_5,
-	 	  .SingleDiff = ADC_SINGLE_ENDED,
-	 	  .OffsetNumber = ADC_OFFSET_NONE,
-	 	  .Offset = 0};
-
-	 	 if (HAL_ADC_ConfigChannel(&hadc1, &channel_config_2) != HAL_OK){
-	 		 return -1;
-	 	 }
-
-	 HAL_ADC_Start(&hadc1);
-	 HAL_ADC_PollForConversion(&hadc1, 200);
-	 tempSensor = HAL_ADC_GetValue(&hadc1);
-	 HAL_ADC_Stop(&hadc1);
-
-	 tempVal = scale_temp(tempSensor, vref);
   }
   /* USER CODE END 3 */
 }
@@ -420,6 +434,47 @@ float scale_temp(uint32_t temp_value, uint32_t vref_value){
 	temp_correct = ((temp2 - temp1)/(cal2 - cal1))*((float)temp_value*v_correct/vref1 - cal1) + 30;
 
 	return temp_correct;
+}
+
+uint32_t get_temp(float *temp){
+	uint32_t tempSensor = 0;
+	uint32_t vref = 0;
+
+	ADC_ChannelConfTypeDef channel_config = {.Channel = ADC_CHANNEL_VREFINT,
+			.Rank = ADC_REGULAR_RANK_1,
+			.SamplingTime = ADC_SAMPLETIME_640CYCLES_5,
+			.SingleDiff = ADC_SINGLE_ENDED,
+			.OffsetNumber = ADC_OFFSET_NONE,
+			.Offset = 0};
+
+	if (HAL_ADC_ConfigChannel(&hadc1, &channel_config) != HAL_OK){
+		return -1;
+	}
+
+	HAL_ADC_Start(&hadc1);
+	HAL_ADC_PollForConversion(&hadc1, 200);
+	vref = HAL_ADC_GetValue(&hadc1);
+	HAL_ADC_Stop(&hadc1);
+
+	ADC_ChannelConfTypeDef channel_config_2 = {.Channel = ADC_CHANNEL_TEMPSENSOR,
+			.Rank = ADC_REGULAR_RANK_1,
+			.SamplingTime = ADC_SAMPLETIME_640CYCLES_5,
+			.SingleDiff = ADC_SINGLE_ENDED,
+			.OffsetNumber = ADC_OFFSET_NONE,
+			.Offset = 0};
+
+	if (HAL_ADC_ConfigChannel(&hadc1, &channel_config_2) != HAL_OK){
+		return -1;
+	}
+
+	HAL_ADC_Start(&hadc1);
+	HAL_ADC_PollForConversion(&hadc1, 200);
+	tempSensor = HAL_ADC_GetValue(&hadc1);
+	HAL_ADC_Stop(&hadc1);
+
+	(*temp) = scale_temp(tempSensor, vref);
+
+	return 0;
 }
 /* USER CODE END 4 */
 
