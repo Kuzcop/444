@@ -37,12 +37,13 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define VALUE_LIMIT 200
-#define N_STEPS 50
+#define VALUE_LIMIT 2730
+#define SIZE 1470
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 DAC_HandleTypeDef hdac1;
+DMA_HandleTypeDef hdma_dac1_ch1;
 
 TIM_HandleTypeDef htim2;
 
@@ -53,15 +54,19 @@ TIM_HandleTypeDef htim2;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_DAC1_Init(void);
 static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
-
+void gen_sine(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint8_t sine = 0;
+uint16_t sine[SIZE];
+uint16_t sine_index = 0;
+uint16_t counter = 0;
+
 /* USER CODE END 0 */
 
 /**
@@ -92,24 +97,21 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_DAC1_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  HAL_DAC_Start(&hdac1, DAC_CHANNEL_1);
-  HAL_DAC_Start(&hdac1, DAC_CHANNEL_2);
+  /*
+   * Part 1
+   */
+//  HAL_DAC_Start(&hdac1, DAC_CHANNEL_1);
+  /*
+   * Part 2
+   */
+  HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, sine, 16, DAC_ALIGN_12B_R);
   HAL_TIM_Base_Start_IT(&htim2);
 
-  uint8_t triangle = 0;
-  uint8_t saw = 0;
-  uint8_t sine = (VALUE_LIMIT/2);
-  float   theta = 0.0;
-  uint8_t delta = (VALUE_LIMIT/N_STEPS)*2;
-  float temp = 0;
-  uint8_t song_index = 0;
-  uint8_t song_index_background = 0;
-  uint8_t update_song  = 1;
-  uint8_t led_switch = 0;
-
+  gen_sine();
 
   /* USER CODE END 2 */
 
@@ -120,10 +122,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
-
-
-
   }
   /* USER CODE END 3 */
 }
@@ -207,7 +205,7 @@ static void MX_DAC1_Init(void)
   /** DAC channel OUT1 config
   */
   sConfig.DAC_SampleAndHold = DAC_SAMPLEANDHOLD_DISABLE;
-  sConfig.DAC_Trigger = DAC_TRIGGER_NONE;
+  sConfig.DAC_Trigger = DAC_TRIGGER_T2_TRGO;
   sConfig.DAC_HighFrequency = DAC_HIGH_FREQUENCY_INTERFACE_MODE_ABOVE_80MHZ;
   sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
   sConfig.DAC_ConnectOnChipPeripheral = DAC_CHIPCONNECT_DISABLE;
@@ -268,6 +266,23 @@ static void MX_TIM2_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMAMUX1_CLK_ENABLE();
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -312,8 +327,26 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin){
 	HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 }
 
-void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim){
-	HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, (uint32_t)(sine));
+/*
+ * Part 1
+ */
+//void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim){
+//	counter++;
+//	if (counter == 300){
+//		HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (uint32_t)(sine[sine_index]));
+//		sine_index++;
+//		counter = 0;
+//		if (sine_index == SIZE) sine_index = 0;
+//	}
+//
+//}
+
+void gen_sine(void){
+	float theta = 0.0;
+	for (int i = 0; i < SIZE; i++){
+		sine[i] = (uint16_t)((VALUE_LIMIT/2.0)*arm_sin_f32(theta) + (VALUE_LIMIT/2.0));
+		theta += (2*PI)/(SIZE);
+	}
 }
 /* USER CODE END 4 */
 
