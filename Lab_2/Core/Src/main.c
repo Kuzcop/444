@@ -176,12 +176,12 @@ int main(void)
 	   	 break;
 	   default:
 		   get_temp(&temp);
-		   HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, (uint32_t)(temp*100));
+		   HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (uint32_t)((temp)*10000));
 	 }
 
 
 	 ITM_Port32(31) = 1;
-	 for (uint32_t i = 0 ; i < 100; i ++){
+	 for (uint32_t i = 0 ; i < 15; i ++){
 	 }
 	 ITM_Port32(31) = 2;
 

@@ -37,8 +37,14 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define VALUE_LIMIT 2730
-#define SIZE 1470
+//#define VALUE_LIMIT 2730
+#define VALUE_LIMIT 170
+
+// Part 1
+//#define SIZE 30
+
+// Part 2
+#define SIZE 30
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -63,7 +69,8 @@ void gen_sine(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint16_t sine[SIZE];
+//uint16_t sine[SIZE];
+uint8_t sine[SIZE];
 uint16_t sine_index = 0;
 uint16_t counter = 0;
 
@@ -108,7 +115,7 @@ int main(void)
   /*
    * Part 2
    */
-  HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, sine, 16, DAC_ALIGN_12B_R);
+  HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, sine, 8, DAC_ALIGN_8B_R);
   HAL_TIM_Base_Start_IT(&htim2);
 
   gen_sine();
@@ -332,7 +339,7 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin){
  */
 //void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim){
 //	counter++;
-//	if (counter == 300){
+//	if (counter == 14){
 //		HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (uint32_t)(sine[sine_index]));
 //		sine_index++;
 //		counter = 0;
@@ -343,8 +350,11 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin){
 
 void gen_sine(void){
 	float theta = 0.0;
+	float val = 0.0;
 	for (int i = 0; i < SIZE; i++){
-		sine[i] = (uint16_t)((VALUE_LIMIT/2.0)*arm_sin_f32(theta) + (VALUE_LIMIT/2.0));
+		val = (VALUE_LIMIT/2.0)*arm_sin_f32(theta);
+		//sine[i] = (uint16_t)(val + (VALUE_LIMIT/2.0));
+		sine[i] = (uint8_t)(val + (VALUE_LIMIT/2.0));
 		theta += (2*PI)/(SIZE);
 	}
 }
