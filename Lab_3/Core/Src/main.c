@@ -60,6 +60,7 @@ DFSDM_Channel_HandleTypeDef hdfsdm1_channel2;
 DMA_HandleTypeDef hdma_dfsdm1_flt0;
 
 TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
@@ -74,6 +75,7 @@ static void MX_DAC1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_DFSDM1_Init(void);
 static void MX_TIM4_Init(void);
+static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 void gen_sine(void);
 /* USER CODE END PFP */
@@ -122,6 +124,7 @@ int main(void)
   MX_TIM2_Init();
   MX_DFSDM1_Init();
   MX_TIM4_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   /*
    * Part 1
@@ -351,6 +354,51 @@ static void MX_TIM2_Init(void)
 }
 
 /**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 10000;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 3000;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+
+}
+
+/**
   * @brief TIM4 Initialization Function
   * @param None
   * @retval None
@@ -460,24 +508,12 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin){
-	//start timer for led
-	HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);
-	HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-	HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0, audio, AUDIO_SIZE);
-}
 
-void HAL_DFSDM_FilterRegConvCpltCallback (DFSDM_Filter_HandleTypeDef * hdfsdm_filter){
-	// stop timer for led
-	// led on
-	HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter0);
-	for (int i = 0; i<AUDIO_SIZE; i++){
-		val = (uint32_t)(audio[i]/256 + pow(2, 23)/pow(2,12));
-		audio[i]= val;
-	}
-	HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_2, audio, AUDIO_SIZE, DAC_ALIGN_12B_R);
-}
-
+// Part 1
+//void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin){
+//	//start timer for led
+//	HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+//}
 
 /*
  * Part 1
@@ -492,6 +528,34 @@ void HAL_DFSDM_FilterRegConvCpltCallback (DFSDM_Filter_HandleTypeDef * hdfsdm_fi
 //	}
 //
 //}
+
+// Part 3
+void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin){
+	HAL_TIM_Base_Start_IT(&htim3);				// Start timer 3 for LED
+	HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
+	HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0, audio, AUDIO_SIZE);	// Start recording
+}
+
+void HAL_DFSDM_FilterRegConvCpltCallback (DFSDM_Filter_HandleTypeDef * hdfsdm_filter){
+	HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter0);			// Stop recording
+	HAL_TIM_Base_Stop_IT(&htim3);								// Stop timer for led
+	HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);	// Turn on Led
+
+	// Scale audio
+	for (int i = 0; i<AUDIO_SIZE; i++){
+		val = (uint32_t)(audio[i]/256 + pow(2, 23)/pow(2,12));
+		audio[i]= val;
+	}
+	HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_2, audio, AUDIO_SIZE, DAC_ALIGN_12B_R);	// Play looped audio
+}
+
+void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim){
+	if (htim == &htim3){
+		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+	}
+
+}
+
 
 void gen_sine(void){
 	float theta = 0.0;
