@@ -43,7 +43,13 @@
 // Part 1
 //#define SIZE 30
 
-// Part 2
+// Part 2 and 3
+//#define SIZE 30
+//#define AD_FREQ 20000
+//#define TALKING_TIME_S 2
+//#define AUDIO_SIZE TALKING_TIME_S*AD_FREQ
+
+// Part 4
 #define SIZE 30
 #define AD_FREQ 20000
 #define TALKING_TIME_S 2
@@ -62,6 +68,7 @@ DMA_HandleTypeDef hdma_dfsdm1_flt0;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
+TIM_HandleTypeDef htim5;
 
 /* USER CODE BEGIN PV */
 
@@ -76,8 +83,10 @@ static void MX_TIM2_Init(void);
 static void MX_DFSDM1_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_TIM5_Init(void);
 /* USER CODE BEGIN PFP */
 void gen_sine(void);
+void gen_notes(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -88,6 +97,14 @@ uint32_t audio[AUDIO_SIZE];
 uint16_t sine_index = 0;
 uint16_t counter = 0;
 uint32_t val = 0;
+uint16_t song_index = 0;
+
+uint16_t note_0[SIZE];
+uint16_t note_1[SIZE];
+uint16_t note_2[SIZE];
+uint16_t note_3[SIZE];
+uint16_t note_4[SIZE];
+uint16_t note_5[SIZE];
 
 /* USER CODE END 0 */
 
@@ -125,6 +142,7 @@ int main(void)
   MX_DFSDM1_Init();
   MX_TIM4_Init();
   MX_TIM3_Init();
+  MX_TIM5_Init();
   /* USER CODE BEGIN 2 */
   /*
    * Part 1
@@ -444,6 +462,51 @@ static void MX_TIM4_Init(void)
 }
 
 /**
+  * @brief TIM5 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM5_Init(void)
+{
+
+  /* USER CODE BEGIN TIM5_Init 0 */
+
+  /* USER CODE END TIM5_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM5_Init 1 */
+
+  /* USER CODE END TIM5_Init 1 */
+  htim5.Instance = TIM5;
+  htim5.Init.Prescaler = 40000;
+  htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim5.Init.Period = 3000;
+  htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim5) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim5, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim5, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM5_Init 2 */
+
+  /* USER CODE END TIM5_Init 2 */
+
+}
+
+/**
   * Enable DMA controller clock
   */
 static void MX_DMA_Init(void)
@@ -530,6 +593,7 @@ static void MX_GPIO_Init(void)
 //}
 
 // Part 3
+/*
 void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin){
 	HAL_TIM_Base_Start_IT(&htim3);				// Start timer 3 for LED
 	HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
@@ -555,7 +619,40 @@ void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim){
 	}
 
 }
+*/
 
+// Part 4
+void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin){
+	HAL_TIM_Base_Start_IT(&htim3);				// Start timer 3 for LED
+	HAL_TIM_Base_Stop_IT(&htim5);
+	HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
+	HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0, audio, AUDIO_SIZE);	// Start recording
+}
+
+void HAL_DFSDM_FilterRegConvCpltCallback (DFSDM_Filter_HandleTypeDef * hdfsdm_filter){
+	HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter0);			// Stop recording
+	HAL_TIM_Base_Stop_IT(&htim3);								// Stop timer for led
+	HAL_TIM_Base_Start_IT(&htim5);
+	HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);	// Turn on Led
+
+	// Scale audio
+	for (int i = 0; i<AUDIO_SIZE; i++){
+		val = (uint32_t)(audio[i]/256 + pow(2, 23)/pow(2,12));
+		audio[i]= val;
+	}
+
+}
+
+void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim){
+	if (htim == &htim3){
+		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+	}
+	else if (htim == &htim5){
+		// INSERT SONG SWITCH using song_index
+		//	HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_2, audio, AUDIO_SIZE, DAC_ALIGN_12B_R);	// Play looped audio
+	}
+
+}
 
 void gen_sine(void){
 	float theta = 0.0;
