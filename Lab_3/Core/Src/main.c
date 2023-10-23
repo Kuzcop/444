@@ -645,7 +645,7 @@ void HAL_DFSDM_FilterRegConvCpltCallback (DFSDM_Filter_HandleTypeDef * hdfsdm_fi
 
 	// Scale audio
 	for (int i = 0; i<AUDIO_SIZE; i++){
-		val = (uint32_t)(audio[i]/256 + pow(2, 23)/pow(2,12));
+		val = (((audio[i] >> 8) + pow(2, 23))/pow(2,12)) * 2/3;
 		audio[i]= val;
 	}
 
