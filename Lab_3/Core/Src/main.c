@@ -86,7 +86,8 @@ static void MX_TIM3_Init(void);
 static void MX_TIM5_Init(void);
 /* USER CODE BEGIN PFP */
 void gen_sine(void);
-uint16_t* gen_notes(uint16_t);
+//uint16_t* gen_notes(uint16_t);
+void gen_notes(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -98,13 +99,14 @@ uint16_t sine_index = 0;
 uint16_t counter = 0;
 uint32_t val = 0;
 uint16_t song_index = 0;
+uint16_t state = -1;
 
-uint16_t note_0[SIZE];
-uint16_t note_1[SIZE*2];
-uint16_t note_2[SIZE*4];
-uint16_t note_3[SIZE*8];
-uint16_t note_4[SIZE*16];
-uint16_t note_5[SIZE*32];
+uint32_t note_0[SIZE*20];
+uint32_t note_1[SIZE*2];
+uint32_t note_2[SIZE*4];
+uint32_t note_3[SIZE*8];
+uint32_t note_4[SIZE*16];
+uint32_t note_5[SIZE*32];
 
 /* USER CODE END 0 */
 
@@ -157,13 +159,13 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim4);
 
   gen_sine();
-
-  *note_0 = gen_notes(SIZE);
-  *note_1 = gen_notes(SIZE*2);
-  *note_2 = gen_notes(SIZE*4);
-  *note_3 = gen_notes(SIZE*8);
-  *note_4 = gen_notes(SIZE*16);
-  *note_5 = gen_notes(SIZE*32);
+  gen_notes();
+//  *note_0 = gen_notes(SIZE*20);
+//  *note_1 = gen_notes(SIZE*2);
+//  *note_2 = gen_notes(SIZE*4);
+//  *note_3 = gen_notes(SIZE*8);
+//  *note_4 = gen_notes(SIZE*16);
+//  *note_5 = gen_notes(SIZE*32);
 
   //HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, note_0, SIZE, DAC_ALIGN_12B_R);
   /* USER CODE END 2 */
@@ -353,9 +355,9 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 40000;
+  htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 3000;
+  htim2.Init.Period = 2721;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -632,24 +634,29 @@ void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim){
 // Part 4
 void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin){
 	song_index = 0;
-	HAL_TIM_Base_Stop_IT(&htim5);
-	HAL_TIM_Base_Start_IT(&htim3);				// Start timer 3 for LED
-	HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
-	HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0, audio, AUDIO_SIZE);	// Start recording
+	state = (state + 1)%2;
+	if (state == 0){
+		HAL_TIM_Base_Stop_IT(&htim5);
+		HAL_TIM_Base_Start_IT(&htim3);				// Start timer 3 for LED
+		HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
+		HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0, audio, AUDIO_SIZE);	// Start recording
+	}
+	else if(state == 1){
+		HAL_TIM_Base_Start_IT(&htim5);
+	}
 }
 
 void HAL_DFSDM_FilterRegConvCpltCallback (DFSDM_Filter_HandleTypeDef * hdfsdm_filter){
 	HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter0);			// Stop recording
 	HAL_TIM_Base_Stop_IT(&htim3);								// Stop timer for led
-	HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);	// Turn on Led
+	HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);	// Turn on Led
 
 	// Scale audio
 	for (int i = 0; i<AUDIO_SIZE; i++){
-		val = (((audio[i] >> 8) + pow(2, 23))/pow(2,12)) * 2/3;
+		val = (((audio[i] >> 8)+ pow(2, 23))/pow(2,12))*2/3;
 		audio[i]= val;
 	}
 
-	HAL_TIM_Base_Start_IT(&htim5);
 }
 
 void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim){
@@ -658,23 +665,37 @@ void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim){
 	}
 	if (htim == &htim5){
 		HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
+		HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);	// Turn on Led
+		song_index - 5;
 		switch(song_index) {
 			case 5:
-				HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_2, note_0, SIZE, DAC_ALIGN_12B_R);
+				HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
+
+				HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_2, note_0, SIZE*20, DAC_ALIGN_12B_R);
 			     break;
 			case 4:
+				HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
+
 				HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_2, note_1, SIZE*2, DAC_ALIGN_12B_R);
 			     break;
 			case 3:
+				HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
+
 				HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_2, note_2, SIZE*4, DAC_ALIGN_12B_R);
 				break;
 			case 2:
+				HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
+
 				HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_2, note_3, SIZE*8, DAC_ALIGN_12B_R);
 				break;
 			case 1:
+				HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
+
 				HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_2, note_4, SIZE*16, DAC_ALIGN_12B_R);
 				break;
 			case 0:
+				HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
+
 				HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_2, note_5, SIZE*32, DAC_ALIGN_12B_R);
 				break;
 			default:
@@ -691,21 +712,74 @@ void gen_sine(void){
 	for (int i = 0; i < SIZE; i++){
 		val = (VALUE_LIMIT/2.0)*arm_sin_f32(theta);
 		sine[i] = (uint16_t)(val + (VALUE_LIMIT/2.0));
-		theta += (2*PI)/(SIZE);
+		theta += (2*PI)/(30);
 	}
 }
 
-uint16_t* gen_notes(uint16_t size){
+//uint16_t* gen_notes(uint16_t size){
+//
+//	uint16_t *arr = (uint16_t *) malloc(size*sizeof(uint16_t));
+//	float theta = 0.0;
+//	float val = 0.0;
+//	for (int i = 0; i < size; i++){
+//		val = (VALUE_LIMIT/2.0)*arm_sin_f32(theta);
+//		arr[i] = (uint16_t)(val + (VALUE_LIMIT/2.0));
+//		theta += (2*PI)/(size);
+//	}
+//	return arr;
+//}
 
-	uint16_t *arr = (uint16_t *) malloc(size*sizeof(uint16_t));
+void gen_notes(void){
+
 	float theta = 0.0;
 	float val = 0.0;
+	uint32_t size = SIZE*20;
 	for (int i = 0; i < size; i++){
 		val = (VALUE_LIMIT/2.0)*arm_sin_f32(theta);
-		arr[i] = (uint16_t)(val + (VALUE_LIMIT/2.0));
-		theta += (2*PI)/(SIZE);
+		note_0[i] = (uint32_t)(val + (VALUE_LIMIT/2.0));
+		theta += (2*PI)/(size);
 	}
-	return arr;
+	theta = 0.0;
+	val = 0.0;
+	size = SIZE*2;
+	for (int i = 0; i < size; i++){
+		val = (VALUE_LIMIT/2.0)*arm_sin_f32(theta);
+		val = (uint32_t)(val + (VALUE_LIMIT/2.0));
+		note_1[i] = val;
+		theta += (2*PI)/(size);
+	}
+	theta = 0.0;
+	val = 0.0;
+	size = SIZE*4;
+	for (int i = 0; i < size; i++){
+		val = (VALUE_LIMIT/2.0)*arm_sin_f32(theta);
+		note_2[i] = (uint32_t)(val + (VALUE_LIMIT/2.0));
+		theta += (2*PI)/(size);
+	}
+	theta = 0.0;
+	val = 0.0;
+	size = SIZE*8;
+	for (int i = 0; i < size; i++){
+		val = (VALUE_LIMIT/2.0)*arm_sin_f32(theta);
+		note_3[i] = (uint32_t)(val + (VALUE_LIMIT/2.0));
+		theta += (2*PI)/(size);
+	}
+	theta = 0.0;
+	val = 0.0;
+	size = SIZE*16;
+	for (int i = 0; i < size; i++){
+		val = (VALUE_LIMIT/2.0)*arm_sin_f32(theta);
+		note_4[i] = (uint32_t)(val + (VALUE_LIMIT/2.0));
+		theta += (2*PI)/(size);
+	}
+	theta = 0.0;
+	val = 0.0;
+	size = SIZE*32;
+	for (int i = 0; i < size; i++){
+		val = (VALUE_LIMIT/2.0)*arm_sin_f32(theta);
+		note_5[i] = (uint32_t)(val + (VALUE_LIMIT/2.0));
+		theta += (2*PI)/(size);
+	}
 }
 /* USER CODE END 4 */
 
