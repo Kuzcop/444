@@ -1,0 +1,439 @@
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file           : main.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2023 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
+/* USER CODE END Header */
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+#define ARM_MATH_CM4
+#include "arm_math.h"
+#include <math.h>
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+#define ITM_Port32(n) (*((volatile unsigned long *) (0xE0000000+4*n)))
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+#define VALUE_LIMIT 2730
+
+// Part 1
+//#define SIZE 30
+
+// Part 2 and 3
+//#define SIZE 30
+//#define AD_FREQ 20000
+//#define TALKING_TIME_S 2
+//#define AUDIO_SIZE TALKING_TIME_S*AD_FREQ
+
+// Part 4
+#define SIZE 3
+#define AD_FREQ 20000
+#define TALKING_TIME_S 2
+#define AUDIO_SIZE TALKING_TIME_S*AD_FREQ
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+
+/* USER CODE BEGIN PV */
+
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+/* USER CODE BEGIN PFP */
+void gen_sine(void);
+//uint16_t* gen_notes(uint16_t);
+void gen_notes(void);
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+//uint16_t sine[SIZE];
+uint16_t sine[SIZE];
+uint32_t audio[AUDIO_SIZE];
+uint16_t sine_index = 0;
+uint16_t counter = 0;
+uint32_t val = 0;
+uint16_t song_index = 0;
+uint16_t state = -1;
+
+uint32_t note_0[SIZE*20];
+uint32_t note_1[SIZE*2];
+uint32_t note_2[SIZE*4];
+uint32_t note_3[SIZE*8];
+uint32_t note_4[SIZE*16];
+uint32_t note_5[SIZE*32];
+
+/* USER CODE END 0 */
+
+/**
+  * @brief  The application entry point.
+  * @retval int
+  */
+int main(void)
+{
+  /* USER CODE BEGIN 1 */
+
+  /* USER CODE END 1 */
+
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  /* USER CODE BEGIN 2 */
+  /*
+   * Part 1
+   */
+//  HAL_DAC_Start(&hdac1, DAC_CHANNEL_1);
+  /*
+   * Part 2
+   */
+  //HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, sine, SIZE, DAC_ALIGN_12B_R);
+
+  //HAL_TIM_Base_Start_IT(&htim2);
+  HAL_TIM_Base_Start_IT(&htim4);
+
+  gen_sine();
+  gen_notes();
+//  *note_0 = gen_notes(SIZE*20);
+//  *note_1 = gen_notes(SIZE*2);
+//  *note_2 = gen_notes(SIZE*4);
+//  *note_3 = gen_notes(SIZE*8);
+//  *note_4 = gen_notes(SIZE*16);
+//  *note_5 = gen_notes(SIZE*32);
+
+  //HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, note_0, SIZE, DAC_ALIGN_12B_R);
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END 3 */
+}
+
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+  /** Configure the main internal regulator output voltage
+  */
+  if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1_BOOST) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.MSIState = RCC_MSI_ON;
+  RCC_OscInitStruct.MSICalibrationValue = 0;
+  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
+  RCC_OscInitStruct.PLL.PLLM = 1;
+  RCC_OscInitStruct.PLL.PLLN = 60;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
+  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/* USER CODE BEGIN 4 */
+
+// Part 1
+//void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin){
+//	//start timer for led
+//	HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+//}
+
+/*
+ * Part 1
+ */
+//void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim){
+//	counter++;
+//	if (counter == 14){
+//		HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (uint32_t)(sine[sine_index]));
+//		sine_index++;
+//		counter = 0;
+//		if (sine_index == SIZE) sine_index = 0;
+//	}
+//
+//}
+
+// Part 3
+/*
+void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin){
+	HAL_TIM_Base_Start_IT(&htim3);				// Start timer 3 for LED
+	HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
+	HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0, audio, AUDIO_SIZE);	// Start recording
+}
+
+void HAL_DFSDM_FilterRegConvCpltCallback (DFSDM_Filter_HandleTypeDef * hdfsdm_filter){
+	HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter0);			// Stop recording
+	HAL_TIM_Base_Stop_IT(&htim3);								// Stop timer for led
+	HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);	// Turn on Led
+
+	// Scale audio
+	for (int i = 0; i<AUDIO_SIZE; i++){
+		val = (uint32_t)(audio[i]/256 + pow(2, 23)/pow(2,12));
+		audio[i]= val;
+	}
+	HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_2, audio, AUDIO_SIZE, DAC_ALIGN_12B_R);	// Play looped audio
+}
+
+void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim){
+	if (htim == &htim3){
+		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+	}
+
+}
+*/
+
+// Part 4
+void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin){
+	song_index = 0;
+	state = (state + 1)%2;
+	if (state == 0){
+		HAL_TIM_Base_Stop_IT(&htim5);
+		HAL_TIM_Base_Start_IT(&htim3);				// Start timer 3 for LED
+		HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
+		HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0, audio, AUDIO_SIZE);	// Start recording
+	}
+	else if(state == 1){
+		HAL_TIM_Base_Start_IT(&htim5);
+	}
+}
+
+void HAL_DFSDM_FilterRegConvCpltCallback (DFSDM_Filter_HandleTypeDef * hdfsdm_filter){
+	HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter0);			// Stop recording
+	HAL_TIM_Base_Stop_IT(&htim3);								// Stop timer for led
+	HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);	// Turn on Led
+
+	// Scale audio
+	for (int i = 0; i<AUDIO_SIZE; i++){
+		val = (((audio[i] >> 8)+ pow(2, 23))/pow(2,12))*2/3;
+		audio[i]= val;
+	}
+
+}
+
+void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim){
+	if (htim == &htim3){
+		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+	}
+	if (htim == &htim5){
+		HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
+		HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);	// Turn on Led
+		song_index - 5;
+		switch(song_index) {
+			case 5:
+				HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
+
+				HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_2, note_0, SIZE*20, DAC_ALIGN_12B_R);
+			     break;
+			case 4:
+				HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
+
+				HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_2, note_1, SIZE*2, DAC_ALIGN_12B_R);
+			     break;
+			case 3:
+				HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
+
+				HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_2, note_2, SIZE*4, DAC_ALIGN_12B_R);
+				break;
+			case 2:
+				HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
+
+				HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_2, note_3, SIZE*8, DAC_ALIGN_12B_R);
+				break;
+			case 1:
+				HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
+
+				HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_2, note_4, SIZE*16, DAC_ALIGN_12B_R);
+				break;
+			case 0:
+				HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_2);	// Stop playing looped audio
+
+				HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_2, note_5, SIZE*32, DAC_ALIGN_12B_R);
+				break;
+			default:
+				HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_2, audio, AUDIO_SIZE, DAC_ALIGN_12B_R);
+			 }
+		song_index = (song_index + 1) % 7;
+	}
+
+}
+
+void gen_sine(void){
+	float theta = 0.0;
+	float val = 0.0;
+	for (int i = 0; i < SIZE; i++){
+		val = (VALUE_LIMIT/2.0)*arm_sin_f32(theta);
+		sine[i] = (uint16_t)(val + (VALUE_LIMIT/2.0));
+		theta += (2*PI)/(30);
+	}
+}
+
+//uint16_t* gen_notes(uint16_t size){
+//
+//	uint16_t *arr = (uint16_t *) malloc(size*sizeof(uint16_t));
+//	float theta = 0.0;
+//	float val = 0.0;
+//	for (int i = 0; i < size; i++){
+//		val = (VALUE_LIMIT/2.0)*arm_sin_f32(theta);
+//		arr[i] = (uint16_t)(val + (VALUE_LIMIT/2.0));
+//		theta += (2*PI)/(size);
+//	}
+//	return arr;
+//}
+
+void gen_notes(void){
+
+	float theta = 0.0;
+	float val = 0.0;
+	uint32_t size = SIZE*20;
+	for (int i = 0; i < size; i++){
+		val = (VALUE_LIMIT/2.0)*arm_sin_f32(theta);
+		note_0[i] = (uint32_t)(val + (VALUE_LIMIT/2.0));
+		theta += (2*PI)/(size);
+	}
+	theta = 0.0;
+	val = 0.0;
+	size = SIZE*2;
+	for (int i = 0; i < size; i++){
+		val = (VALUE_LIMIT/2.0)*arm_sin_f32(theta);
+		val = (uint32_t)(val + (VALUE_LIMIT/2.0));
+		note_1[i] = val;
+		theta += (2*PI)/(size);
+	}
+	theta = 0.0;
+	val = 0.0;
+	size = SIZE*4;
+	for (int i = 0; i < size; i++){
+		val = (VALUE_LIMIT/2.0)*arm_sin_f32(theta);
+		note_2[i] = (uint32_t)(val + (VALUE_LIMIT/2.0));
+		theta += (2*PI)/(size);
+	}
+	theta = 0.0;
+	val = 0.0;
+	size = SIZE*8;
+	for (int i = 0; i < size; i++){
+		val = (VALUE_LIMIT/2.0)*arm_sin_f32(theta);
+		note_3[i] = (uint32_t)(val + (VALUE_LIMIT/2.0));
+		theta += (2*PI)/(size);
+	}
+	theta = 0.0;
+	val = 0.0;
+	size = SIZE*16;
+	for (int i = 0; i < size; i++){
+		val = (VALUE_LIMIT/2.0)*arm_sin_f32(theta);
+		note_4[i] = (uint32_t)(val + (VALUE_LIMIT/2.0));
+		theta += (2*PI)/(size);
+	}
+	theta = 0.0;
+	val = 0.0;
+	size = SIZE*32;
+	for (int i = 0; i < size; i++){
+		val = (VALUE_LIMIT/2.0)*arm_sin_f32(theta);
+		note_5[i] = (uint32_t)(val + (VALUE_LIMIT/2.0));
+		theta += (2*PI)/(size);
+	}
+}
+/* USER CODE END 4 */
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+  __disable_irq();
+  while (1)
+  {
+  }
+  /* USER CODE END Error_Handler_Debug */
+}
+
+#ifdef  USE_FULL_ASSERT
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t *file, uint32_t line)
+{
+  /* USER CODE BEGIN 6 */
+  /* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* USER CODE END 6 */
+}
+#endif /* USE_FULL_ASSERT */
