@@ -10,3 +10,4 @@ org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:Lab_2\ Debug/activeLaunchTarget
 org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:Lab_3\ Debug/activeLaunchMode=run
 org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:Lab_3\ Debug/activeLaunchTarget=null\:---
 org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:Lab_4\ Debug/activeLaunchMode=debug
+org.eclipse.cdt.dsf.gdb.gdbRemotedescriptorType\:Lab_4\ Debug/activeLaunchTarget=null\:---

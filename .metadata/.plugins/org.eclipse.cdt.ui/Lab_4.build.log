@@ -1,23 +1,10 @@
-17:20:29 **** Incremental Build of configuration Debug for project Lab_4 ****
+22:24:59 **** Incremental Build of configuration Debug for project Lab_4 ****
 make -j12 all 
-arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L4S5xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
-../Core/Src/main.c: In function 'main':
-../Core/Src/main.c:111:9: warning: variable 'humidity' set but not used [-Wunused-but-set-variable]
-  111 |   float humidity = 0.0;
-      |         ^~~~~~~~
-arm-none-eabi-gcc -o "Lab_4.elf" @"objects.list"  -larm_cortexM4lf_math -mcpu=cortex-m4 -T"C:\Users\Admin\OneDrive\Documents\GitHub\444\Lab_4\STM32L4S5VITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Lab_4.map" -Wl,--gc-sections -static -L"C:\Users\Admin\OneDrive\Documents\GitHub\444\Lab_4\Core\Lib" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
-C:/ST/STM32CubeIDE_1.13.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.11.3.rel1.win32_1.1.0.202305231506/tools/bin/../lib/gcc/arm-none-eabi/11.3.1/../../../../arm-none-eabi/bin/ld.exe: ./Core/Src/main.o: in function `main':
-C:/Users/Admin/OneDrive/Documents/GitHub/444/Lab_4/Debug/../Core/Src/main.c:106: undefined reference to `BSP_HSENSOR_Init'
-C:/ST/STM32CubeIDE_1.13.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.11.3.rel1.win32_1.1.0.202305231506/tools/bin/../lib/gcc/arm-none-eabi/11.3.1/../../../../arm-none-eabi/bin/ld.exe: C:/Users/Admin/OneDrive/Documents/GitHub/444/Lab_4/Debug/../Core/Src/main.c:107: undefined reference to `BSP_MAGNETO_Init'
-C:/ST/STM32CubeIDE_1.13.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.11.3.rel1.win32_1.1.0.202305231506/tools/bin/../lib/gcc/arm-none-eabi/11.3.1/../../../../arm-none-eabi/bin/ld.exe: C:/Users/Admin/OneDrive/Documents/GitHub/444/Lab_4/Debug/../Core/Src/main.c:108: undefined reference to `BSP_ACCELERO_Init'
-C:/ST/STM32CubeIDE_1.13.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.11.3.rel1.win32_1.1.0.202305231506/tools/bin/../lib/gcc/arm-none-eabi/11.3.1/../../../../arm-none-eabi/bin/ld.exe: C:/Users/Admin/OneDrive/Documents/GitHub/444/Lab_4/Debug/../Core/Src/main.c:109: undefined reference to `BSP_GYRO_Init'
-C:/ST/STM32CubeIDE_1.13.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.11.3.rel1.win32_1.1.0.202305231506/tools/bin/../lib/gcc/arm-none-eabi/11.3.1/../../../../arm-none-eabi/bin/ld.exe: C:/Users/Admin/OneDrive/Documents/GitHub/444/Lab_4/Debug/../Core/Src/main.c:124: undefined reference to `BSP_HSENSOR_ReadHumidity'
-C:/ST/STM32CubeIDE_1.13.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.11.3.rel1.win32_1.1.0.202305231506/tools/bin/../lib/gcc/arm-none-eabi/11.3.1/../../../../arm-none-eabi/bin/ld.exe: C:/Users/Admin/OneDrive/Documents/GitHub/444/Lab_4/Debug/../Core/Src/main.c:125: undefined reference to `BSP_ACCELERO_AccGetXYZ'
-C:/ST/STM32CubeIDE_1.13.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.11.3.rel1.win32_1.1.0.202305231506/tools/bin/../lib/gcc/arm-none-eabi/11.3.1/../../../../arm-none-eabi/bin/ld.exe: C:/Users/Admin/OneDrive/Documents/GitHub/444/Lab_4/Debug/../Core/Src/main.c:126: undefined reference to `BSP_GYRO_GetXYZ'
-C:/ST/STM32CubeIDE_1.13.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.11.3.rel1.win32_1.1.0.202305231506/tools/bin/../lib/gcc/arm-none-eabi/11.3.1/../../../../arm-none-eabi/bin/ld.exe: C:/Users/Admin/OneDrive/Documents/GitHub/444/Lab_4/Debug/../Core/Src/main.c:127: undefined reference to `BSP_MAGNETO_GetXYZ'
-collect2.exe: error: ld returned 1 exit status
-make: *** [makefile:89: Lab_4.elf] Error 1
-"make -j12 all" terminated with exit code 2. Build might be incomplete.
+arm-none-eabi-size   Lab_4.elf 
+   text	   data	    bss	    dec	    hex	filename
+  24764	    124	   2228	  27116	   69ec	Lab_4.elf
+Finished building: default.size.stdout
+ 
 
-17:20:35 Build Failed. 10 errors, 1 warnings. (took 5s.799ms)
+22:25:01 Build Finished. 0 errors, 0 warnings. (took 1s.519ms)
 

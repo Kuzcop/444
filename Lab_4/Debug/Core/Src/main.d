@@ -29,18 +29,20 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart_ex.h \
  ../Core/Inc/arm_math.h ../Drivers/CMSIS/Include/cmsis_compiler.h \
- ../Core/Inc/stm32l4s5i_iot01_magneto.h ../Core/Inc/stm32l4s5i_iot01.h \
- ../Core/Inc/./Components/lis3mdl/lis3mdl.h \
- ../Core/Inc/./Components/lis3mdl/../Common/magneto.h \
- ../Core/Inc/stm32l4s5i_iot01_hsensor.h \
- ../Core/Inc/./Components/hts221/hts221.h \
- ../Core/Inc/./Components/hts221/../Common/hsensor.h \
- ../Core/Inc/./Components/hts221/../Common/tsensor.h \
- ../Core/Inc/stm32l4s5i_iot01_gyro.h \
- ../Core/Inc/./Components/lsm6dsl/lsm6dsl.h \
- ../Core/Inc/./Components/lsm6dsl/../Common/accelero.h \
- ../Core/Inc/./Components/lsm6dsl/../Common/gyro.h \
- ../Core/Inc/stm32l4s5i_iot01_accelero.h ../Core/Inc/stm32l4s5i_iot01.h
+ C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/stm32l4s5i_iot01_magneto.h \
+ C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/stm32l4s5i_iot01.h \
+ C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/../Components/lis3mdl/lis3mdl.h \
+ C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/../Components/lis3mdl/../Common/magneto.h \
+ C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/stm32l4s5i_iot01_hsensor.h \
+ C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/../Components/hts221/hts221.h \
+ C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/../Components/hts221/../Common/hsensor.h \
+ C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/../Components/hts221/../Common/tsensor.h \
+ C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/stm32l4s5i_iot01_gyro.h \
+ C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/../Components/lsm6dsl/lsm6dsl.h \
+ C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/../Components/lsm6dsl/../Common/accelero.h \
+ C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/../Components/lsm6dsl/../Common/gyro.h \
+ C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/stm32l4s5i_iot01_accelero.h \
+ C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/stm32l4s5i_iot01.h
 ../Core/Inc/main.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:
 ../Core/Inc/stm32l4xx_hal_conf.h:
@@ -73,17 +75,17 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart_ex.h:
 ../Core/Inc/arm_math.h:
 ../Drivers/CMSIS/Include/cmsis_compiler.h:
-../Core/Inc/stm32l4s5i_iot01_magneto.h:
-../Core/Inc/stm32l4s5i_iot01.h:
-../Core/Inc/./Components/lis3mdl/lis3mdl.h:
-../Core/Inc/./Components/lis3mdl/../Common/magneto.h:
-../Core/Inc/stm32l4s5i_iot01_hsensor.h:
-../Core/Inc/./Components/hts221/hts221.h:
-../Core/Inc/./Components/hts221/../Common/hsensor.h:
-../Core/Inc/./Components/hts221/../Common/tsensor.h:
-../Core/Inc/stm32l4s5i_iot01_gyro.h:
-../Core/Inc/./Components/lsm6dsl/lsm6dsl.h:
-../Core/Inc/./Components/lsm6dsl/../Common/accelero.h:
-../Core/Inc/./Components/lsm6dsl/../Common/gyro.h:
-../Core/Inc/stm32l4s5i_iot01_accelero.h:
-../Core/Inc/stm32l4s5i_iot01.h:
+C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/stm32l4s5i_iot01_magneto.h:
+C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/stm32l4s5i_iot01.h:
+C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/../Components/lis3mdl/lis3mdl.h:
+C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/../Components/lis3mdl/../Common/magneto.h:
+C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/stm32l4s5i_iot01_hsensor.h:
+C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/../Components/hts221/hts221.h:
+C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/../Components/hts221/../Common/hsensor.h:
+C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/../Components/hts221/../Common/tsensor.h:
+C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/stm32l4s5i_iot01_gyro.h:
+C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/../Components/lsm6dsl/lsm6dsl.h:
+C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/../Components/lsm6dsl/../Common/accelero.h:
+C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/../Components/lsm6dsl/../Common/gyro.h:
+C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/stm32l4s5i_iot01_accelero.h:
+C:/Users/Admin/STM32Cube/Repository/STM32Cube_FW_L4_V1.18.0/Drivers/BSP/B-L4S5I-IOT01/stm32l4s5i_iot01.h:
