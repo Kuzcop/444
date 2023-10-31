@@ -140,16 +140,20 @@ int main(void)
 
 	  switch(sensor){
 	  	  case 0:
-	  		  sprintf(str_hum, "The humidity is %d\n\r", (int)humidity);
+	  		  memset(str_hum, '\0', sizeof(str_hum));
+	  		  snprintf(str_hum, 100, "The humidity is %d\n\r", (uint8_t)humidity);
 	  		  break;
 	  	  case 1:
-	  		  sprintf(str_hum, "The accelerometer reports that velocities are: x = %d, y = %d, z = %d\n\r", accel[0], accel[1], accel[2]);
+	  		  memset(str_hum, '\0', sizeof(str_hum));
+	  		  snprintf(str_hum, 100, "The accelerometer reports that: x = %d, y = %d, z = %d\n\r", accel[0], accel[1], accel[2]);
 	  		  break;
 	  	  case 2:
-	  		 printf(str_hum, "The gyroscope reports that: x = %d, y = %d, z = %d\n\r",(int)gyro[0],(int)gyro[1],(int)gyro[2]);
+	  		  memset(str_hum, '\0', sizeof(str_hum));
+	  		  snprintf(str_hum, 100, "The gyroscope reports that: x = %d, y = %d, z = %d\n\r",(uint8_t)gyro[0],(uint8_t)gyro[1],(uint8_t)gyro[2]);
 	  		 break;
 	  	  case 3:
-	  		 printf(str_hum, "The magnetometer reports: x = %d, y = %d, z = %d\n\r", magneto[0], magneto[1], magneto[2]);
+	  		  memset(str_hum, '\0', sizeof(str_hum));
+	  		  snprintf(str_hum, 100, "The magnetometer reports: x = %d, y = %d, z = %d\n\r", magneto[0], magneto[1], magneto[2]);
 	  		 break;
 	  	  default:
 	  }
@@ -165,7 +169,7 @@ int main(void)
 
 //	  printf("Hello World");
 //	  printf("\r\n");
-//	  HAL_Delay(150);
+	  HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }
