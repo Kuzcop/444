@@ -1,10 +1,36 @@
-22:24:59 **** Incremental Build of configuration Debug for project Lab_4 ****
+15:25:19 **** Incremental Build of configuration Debug for project Lab_4 ****
 make -j12 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L4S5xx -c -I"C:/Users/Admin/OneDrive/Documents/GitHub/444/Lab_4/Drivers/BSP/Components/hts221" -I"C:/Users/Admin/OneDrive/Documents/GitHub/444/Lab_4/Drivers/BSP/Components/mx25r6435f" -I"C:/Users/Admin/OneDrive/Documents/GitHub/444/Lab_4/Drivers/BSP/Components/lsm6dsl" -I"C:/Users/Admin/OneDrive/Documents/GitHub/444/Lab_4/Drivers/BSP/Components/lis3mdl" -I"C:/Users/Admin/OneDrive/Documents/GitHub/444/Lab_4/Drivers/BSP/Components/lps22hb" -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -I"C:/Users/Admin/OneDrive/Documents/GitHub/444/Lab_4/Drivers/BSP/B-L4S5I-IOT01" -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'main':
+../Core/Src/main.c:153:28: warning: passing argument 1 of 'BSP_QSPI_Write' from incompatible pointer type [-Wincompatible-pointer-types]
+  153 |          if(BSP_QSPI_Write(&humidity, HUMM_ADD + add_offset*sizeof(float), sizeof(float)) != QSPI_OK){
+      |                            ^~~~~~~~~
+      |                            |
+      |                            float *
+In file included from ../Core/Src/main.c:35:
+C:/Users/Admin/OneDrive/Documents/GitHub/444/Lab_4/Drivers/BSP/B-L4S5I-IOT01/stm32l4s5i_iot01_qspi.h:83:50: note: expected 'uint8_t *' {aka 'unsigned char *'} but argument is of type 'float *'
+   83 | uint8_t BSP_QSPI_Write                 (uint8_t* pData, uint32_t WriteAddr, uint32_t Size);
+      |                                         ~~~~~~~~~^~~~~
+../Core/Src/main.c:157:27: warning: passing argument 1 of 'BSP_QSPI_Read' from incompatible pointer type [-Wincompatible-pointer-types]
+  157 |          if(BSP_QSPI_Read(&flash_humidity, HUMM_ADD + add_offset*sizeof(float), sizeof(float))!= QSPI_OK){
+      |                           ^~~~~~~~~~~~~~~
+      |                           |
+      |                           float *
+In file included from ../Core/Src/main.c:35:
+C:/Users/Admin/OneDrive/Documents/GitHub/444/Lab_4/Drivers/BSP/B-L4S5I-IOT01/stm32l4s5i_iot01_qspi.h:82:50: note: expected 'uint8_t *' {aka 'unsigned char *'} but argument is of type 'float *'
+   82 | uint8_t BSP_QSPI_Read                  (uint8_t* pData, uint32_t ReadAddr, uint32_t Size);
+      |                                         ~~~~~~~~~^~~~~
+arm-none-eabi-gcc -o "Lab_4.elf" @"objects.list"  -larm_cortexM4lf_math -mcpu=cortex-m4 -T"C:\Users\Admin\OneDrive\Documents\GitHub\444\Lab_4\STM32L4S5VITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Lab_4.map" -Wl,--gc-sections -static -L"C:\Users\Admin\OneDrive\Documents\GitHub\444\Lab_4\Core\Lib" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: Lab_4.elf
+ 
 arm-none-eabi-size   Lab_4.elf 
+arm-none-eabi-objdump -h -S  Lab_4.elf  > "Lab_4.list"
    text	   data	    bss	    dec	    hex	filename
-  24764	    124	   2228	  27116	   69ec	Lab_4.elf
+  28640	    188	   2076	  30904	   78b8	Lab_4.elf
 Finished building: default.size.stdout
  
+Finished building: Lab_4.list
+ 
 
-22:25:01 Build Finished. 0 errors, 0 warnings. (took 1s.519ms)
+15:25:22 Build Finished. 0 errors, 2 warnings. (took 2s.519ms)
 

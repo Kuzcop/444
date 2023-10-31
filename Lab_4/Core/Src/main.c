@@ -31,6 +31,8 @@
 #include "stm32l4s5i_iot01_gyro.h"
 #include "stm32l4s5i_iot01_accelero.h"
 #include "stm32l4s5i_iot01.h"
+#include "mx25r6435f.h"
+#include "stm32l4s5i_iot01_qspi.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -41,6 +43,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define ITM_Port32(n) (*((volatile unsigned long *) (0xE0000000+4*n)))
+#define HUMM_ADD
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -51,10 +54,13 @@
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c2;
 
+OSPI_HandleTypeDef hospi1;
+
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 float humidity = 0.0;
+float flash_humidity = 0.0;
 int16_t accel[3];
 float gyro[3];
 int16_t magneto[3];
@@ -63,6 +69,10 @@ char msg1[] = "***** Humidity measurements *****\n\n\r";
 char msg2[] = "=====> Initialize Humidity Sensor HT221 \r\n";
 char msg3[] = "=====> Humidity sensor initialized \r\n";
 uint8_t sensor = 0;
+uint8_t add_offset =0;
+
+uint8_t values[3] = {1, 2, 3};
+uint8_t result[3] = {0,0,0};
 
 
 /* USER CODE END PV */
@@ -72,6 +82,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C2_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_OCTOSPI1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -114,14 +125,17 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C2_Init();
   MX_USART1_UART_Init();
+  MX_OCTOSPI1_Init();
   /* USER CODE BEGIN 2 */
-  // initialize the four sensors
-//  HAL_UART_Transmit(&huart1, msg1, sizeof(msg1), 1000);
-//  HAL_UART_Transmit(&huart1, msg2, sizeof(msg2), 1000);
   BSP_HSENSOR_Init();
   BSP_MAGNETO_Init();
   BSP_ACCELERO_Init();
   BSP_GYRO_Init();
+  BSP_QSPI_Init();
+
+  if(BSP_QSPI_Erase_Block(0) != QSPI_OK){
+	Error_Handler();
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -132,44 +146,22 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  // read all four sensors
-	  humidity = BSP_HSENSOR_ReadHumidity();
-	  BSP_ACCELERO_AccGetXYZ(accel);
-	  BSP_GYRO_GetXYZ(gyro);
-	  BSP_MAGNETO_GetXYZ(magneto);
 
-	  switch(sensor){
-	  	  case 0:
-	  		  memset(str_hum, '\0', sizeof(str_hum));
-	  		  snprintf(str_hum, 100, "The humidity is %d\n\r", (uint8_t)humidity);
-	  		  break;
-	  	  case 1:
-	  		  memset(str_hum, '\0', sizeof(str_hum));
-	  		  snprintf(str_hum, 100, "The accelerometer reports that: x = %d, y = %d, z = %d\n\r", accel[0], accel[1], accel[2]);
-	  		  break;
-	  	  case 2:
-	  		  memset(str_hum, '\0', sizeof(str_hum));
-	  		  snprintf(str_hum, 100, "The gyroscope reports that: x = %d, y = %d, z = %d\n\r",(uint8_t)gyro[0],(uint8_t)gyro[1],(uint8_t)gyro[2]);
-	  		 break;
-	  	  case 3:
-	  		  memset(str_hum, '\0', sizeof(str_hum));
-	  		  snprintf(str_hum, 100, "The magnetometer reports: x = %d, y = %d, z = %d\n\r", magneto[0], magneto[1], magneto[2]);
-	  		 break;
-	  	  default:
-	  }
+	 HAL_GPIO_WritePin(errorLED_GPIO_Port, errorLED_Pin, GPIO_PIN_SET);
+	 humidity = BSP_HSENSOR_ReadHumidity();
 
-	  HAL_UART_Transmit(&huart1, (uint8_t*) str_hum, sizeof(str_hum), HAL_MAX_DELAY);
 
-//	  int humInt1 = humidity;
-//	  float humfrac = humidity - humInt1;
-//	  int humInt2 = trunc(humfrac * 100);
-//	  sprintf(str_hum, "The humidity is %d\n\r", (int)humidity);
-//	  HAL_UART_Transmit(&huart1, (uint8_t*) str_hum, sizeof(str_hum), 1000);
-//	  HAL_Delay(1000);
+	 if(BSP_QSPI_Write(&humidity, HUMM_ADD + add_offset*sizeof(float), sizeof(float)) != QSPI_OK){
+		 Error_Handler();
+	 }
 
-//	  printf("Hello World");
-//	  printf("\r\n");
-	  HAL_Delay(100);
+	 if(BSP_QSPI_Read(&flash_humidity, HUMM_ADD + add_offset*sizeof(float), sizeof(float))!= QSPI_OK){
+		 Error_Handler();
+	 }
+
+	 add_offset = (add_offset + 1)%10;
+	 flash_humidity = 0;
+	 HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }
@@ -273,6 +265,54 @@ static void MX_I2C2_Init(void)
 }
 
 /**
+  * @brief OCTOSPI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_OCTOSPI1_Init(void)
+{
+
+  /* USER CODE BEGIN OCTOSPI1_Init 0 */
+
+  /* USER CODE END OCTOSPI1_Init 0 */
+
+  OSPIM_CfgTypeDef OSPIM_Cfg_Struct = {0};
+
+  /* USER CODE BEGIN OCTOSPI1_Init 1 */
+
+  /* USER CODE END OCTOSPI1_Init 1 */
+  /* OCTOSPI1 parameter configuration*/
+  hospi1.Instance = OCTOSPI1;
+  hospi1.Init.FifoThreshold = 1;
+  hospi1.Init.DualQuad = HAL_OSPI_DUALQUAD_DISABLE;
+  hospi1.Init.MemoryType = HAL_OSPI_MEMTYPE_MACRONIX;
+  hospi1.Init.DeviceSize = 32;
+  hospi1.Init.ChipSelectHighTime = 1;
+  hospi1.Init.FreeRunningClock = HAL_OSPI_FREERUNCLK_DISABLE;
+  hospi1.Init.ClockMode = HAL_OSPI_CLOCK_MODE_0;
+  hospi1.Init.ClockPrescaler = 1;
+  hospi1.Init.SampleShifting = HAL_OSPI_SAMPLE_SHIFTING_NONE;
+  hospi1.Init.DelayHoldQuarterCycle = HAL_OSPI_DHQC_DISABLE;
+  hospi1.Init.ChipSelectBoundary = 0;
+  hospi1.Init.DelayBlockBypass = HAL_OSPI_DELAY_BLOCK_BYPASSED;
+  if (HAL_OSPI_Init(&hospi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  OSPIM_Cfg_Struct.ClkPort = 1;
+  OSPIM_Cfg_Struct.NCSPort = 1;
+  OSPIM_Cfg_Struct.IOLowPort = HAL_OSPIM_IOPORT_1_LOW;
+  if (HAL_OSPIM_Config(&hospi1, &OSPIM_Cfg_Struct, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN OCTOSPI1_Init 2 */
+
+  /* USER CODE END OCTOSPI1_Init 2 */
+
+}
+
+/**
   * @brief USART1 Initialization Function
   * @param None
   * @retval None
@@ -332,14 +372,35 @@ static void MX_GPIO_Init(void)
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(errorLED_GPIO_Port, errorLED_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(greenLED_GPIO_Port, greenLED_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : errorLED_Pin */
+  GPIO_InitStruct.Pin = errorLED_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(errorLED_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : pushbutton_Pin */
   GPIO_InitStruct.Pin = pushbutton_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(pushbutton_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : greenLED_Pin */
+  GPIO_InitStruct.Pin = greenLED_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(greenLED_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
@@ -365,6 +426,8 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin){
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
+	HAL_GPIO_WritePin(errorLED_GPIO_Port, errorLED_Pin, GPIO_PIN_RESET);
+	__BKPT();
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
   while (1)
