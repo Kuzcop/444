@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -43,7 +44,10 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define ITM_Port32(n) (*((volatile unsigned long *) (0xE0000000+4*n)))
-#define HUMM_ADD
+#define HUMM_ADD 0
+#define ACCEL_ADD 400
+#define GYRO_ADD 1000
+#define MAGNO_ADD 2200
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -58,6 +62,9 @@ OSPI_HandleTypeDef hospi1;
 
 UART_HandleTypeDef huart1;
 
+osThreadId defaultTaskHandle;
+osThreadId monitorPBHandle;
+osThreadId readSensorsHandle;
 /* USER CODE BEGIN PV */
 float humidity = 0.0;
 float flash_humidity = 0.0;
@@ -65,14 +72,20 @@ int16_t accel[3];
 float gyro[3];
 int16_t magneto[3];
 char str_hum[100] = ""; //formatted string message to display the temperature
-char msg1[] = "***** Humidity measurements *****\n\n\r";
-char msg2[] = "=====> Initialize Humidity Sensor HT221 \r\n";
-char msg3[] = "=====> Humidity sensor initialized \r\n";
+
 uint8_t sensor = 0;
 uint8_t add_offset =0;
+uint8_t INDEX = 0;
+uint8_t if_wrap_around = 0;
+uint8_t size = 0;
 
 uint8_t values[3] = {1, 2, 3};
 uint8_t result[3] = {0,0,0};
+
+float humidity_array[100];
+int16_t accel_array[300];
+float gyro_array[300];
+int16_t magneto_array[300];
 
 
 /* USER CODE END PV */
@@ -83,6 +96,10 @@ static void MX_GPIO_Init(void);
 static void MX_I2C2_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_OCTOSPI1_Init(void);
+void StartDefaultTask(void const * argument);
+void startMonitorPB(void const * argument);
+void startReadSensors(void const * argument);
+
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -138,6 +155,43 @@ int main(void)
   }
   /* USER CODE END 2 */
 
+  /* USER CODE BEGIN RTOS_MUTEX */
+  /* add mutexes, ... */
+  /* USER CODE END RTOS_MUTEX */
+
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* add semaphores, ... */
+  /* USER CODE END RTOS_SEMAPHORES */
+
+  /* USER CODE BEGIN RTOS_TIMERS */
+  /* start timers, add new ones, ... */
+  /* USER CODE END RTOS_TIMERS */
+
+  /* USER CODE BEGIN RTOS_QUEUES */
+  /* add queues, ... */
+  /* USER CODE END RTOS_QUEUES */
+
+  /* Create the thread(s) */
+  /* definition and creation of defaultTask */
+  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
+  defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
+
+  /* definition and creation of monitorPB */
+  osThreadDef(monitorPB, startMonitorPB, osPriorityNormal, 0, 128);
+  monitorPBHandle = osThreadCreate(osThread(monitorPB), NULL);
+
+  /* definition and creation of readSensors */
+  osThreadDef(readSensors, startReadSensors, osPriorityNormal, 0, 128);
+  readSensorsHandle = osThreadCreate(osThread(readSensors), NULL);
+
+  /* USER CODE BEGIN RTOS_THREADS */
+  /* add threads, ... */
+  /* USER CODE END RTOS_THREADS */
+
+  /* Start scheduler */
+  osKernelStart();
+
+  /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -147,21 +201,21 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
 
-	 HAL_GPIO_WritePin(errorLED_GPIO_Port, errorLED_Pin, GPIO_PIN_SET);
-	 humidity = BSP_HSENSOR_ReadHumidity();
-
-
-	 if(BSP_QSPI_Write(&humidity, HUMM_ADD + add_offset*sizeof(float), sizeof(float)) != QSPI_OK){
-		 Error_Handler();
-	 }
-
-	 if(BSP_QSPI_Read(&flash_humidity, HUMM_ADD + add_offset*sizeof(float), sizeof(float))!= QSPI_OK){
-		 Error_Handler();
-	 }
-
-	 add_offset = (add_offset + 1)%10;
-	 flash_humidity = 0;
-	 HAL_Delay(100);
+//	 HAL_GPIO_WritePin(errorLED_GPIO_Port, errorLED_Pin, GPIO_PIN_SET);
+//	 humidity = BSP_HSENSOR_ReadHumidity();
+//
+//
+//	 if(BSP_QSPI_Write(&humidity, HUMM_ADD + add_offset*sizeof(float), sizeof(float)) != QSPI_OK){
+//		 Error_Handler();
+//	 }
+//
+//	 if(BSP_QSPI_Read(&flash_humidity, HUMM_ADD + add_offset*sizeof(float), sizeof(float))!= QSPI_OK){
+//		 Error_Handler();
+//	 }
+//
+//	 add_offset = (add_offset + 1)%10;
+//	 flash_humidity = 0;
+//	 HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }
@@ -403,7 +457,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(greenLED_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
@@ -413,11 +467,158 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin){
-	sensor = (sensor + 1)%4;
+	sensor = (sensor + 1)%5;
 
 }
 
 /* USER CODE END 4 */
+
+/* USER CODE BEGIN Header_StartDefaultTask */
+/**
+  * @brief  Function implementing the defaultTask thread.
+  * @param  argument: Not used
+  * @retval None
+  */
+/* USER CODE END Header_StartDefaultTask */
+void StartDefaultTask(void const * argument)
+{
+  /* USER CODE BEGIN 5 */
+  /* Infinite loop */
+  for(;;)
+  {
+	  osDelay(100);
+	  HAL_UART_Transmit(&huart1, (uint8_t*) str_hum, sizeof(str_hum), HAL_MAX_DELAY);
+  }
+  /* USER CODE END 5 */
+}
+
+/* USER CODE BEGIN Header_startMonitorPB */
+/**
+* @brief Function implementing the monitorPB thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_startMonitorPB */
+void startMonitorPB(void const * argument)
+{
+  /* USER CODE BEGIN startMonitorPB */
+  /* Infinite loop */
+  for(;;)
+  {
+	  osDelay(1);
+	  switch(sensor){
+	  	  case 0:
+	  		  memset(str_hum, '\0', sizeof(str_hum));
+	  		  snprintf(str_hum, 100, "The humidity is %d\n\r", (uint8_t)humidity);
+	  		  break;
+	  	  case 1:
+	  		  memset(str_hum, '\0', sizeof(str_hum));
+	  		  snprintf(str_hum, 100, "The accelerometer reports that: x = %d, y = %d, z = %d\n\r", accel[0], accel[1], accel[2]);
+	  		  break;
+	  	  case 2:
+	  		  memset(str_hum, '\0', sizeof(str_hum));
+	  		  snprintf(str_hum, 100, "The gyroscope reports that: x = %d, y = %d, z = %d\n\r",(uint8_t)gyro[0],(uint8_t)gyro[1],(uint8_t)gyro[2]);
+	  		 break;
+	  	  case 3:
+	  		  memset(str_hum, '\0', sizeof(str_hum));
+	  		  snprintf(str_hum, 100, "The magnetometer reports: x = %d, y = %d, z = %d\n\r", magneto[0], magneto[1], magneto[2]);
+	  		 break;
+	  	  case 4:
+	  		 size = if_wrap_around*100 + (if_wrap_around==0)*INDEX;
+//	  		 if (if_wrap_around == 1){
+//	  			 size = 100;
+//	  		 }
+//	  		 else{
+//	  			 size = INDEX;
+//	  		 }
+	  		 if(BSP_QSPI_Read(humidity_array, HUMM_ADD, sizeof(float)*100)!= QSPI_OK){
+	  			 Error_Handler();
+	  		 }
+	  		 if(BSP_QSPI_Read(accel_array, ACCEL_ADD, sizeof(int16_t)*100)!= QSPI_OK){
+	  			  Error_Handler();
+	  		 }
+	  		 if(BSP_QSPI_Read(gyro_array, GYRO_ADD, sizeof(float)*100)!= QSPI_OK){
+	  			 Error_Handler();
+	  		 }
+	  		 if(BSP_QSPI_Read(magneto_array, MAGNO_ADD, sizeof(int16_t)*100)!= QSPI_OK){
+	  			Error_Handler();
+	  		 }
+
+	  		 //mean
+	  		 for (int i = 0; i < size; i++){
+
+	  		 }
+	  		 break;
+	  	  default:
+	  }
+  }
+  /* USER CODE END startMonitorPB */
+}
+
+/* USER CODE BEGIN Header_startReadSensors */
+/**
+* @brief Function implementing the readSensors thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_startReadSensors */
+void startReadSensors(void const * argument)
+{
+  /* USER CODE BEGIN startReadSensors */
+  /* Infinite loop */
+  for(;;)
+  {
+	osDelay(100);
+	humidity = BSP_HSENSOR_ReadHumidity();
+	BSP_ACCELERO_AccGetXYZ(accel);
+	BSP_GYRO_GetXYZ(gyro);
+	BSP_MAGNETO_GetXYZ(magneto);
+
+	//write the values into memory
+	if (sensor != 4){
+		if(BSP_QSPI_Write(&humidity, HUMM_ADD + INDEX*sizeof(float), sizeof(float)) != QSPI_OK){
+			Error_Handler();
+		}
+		if(BSP_QSPI_Write(accel, ACCEL_ADD + INDEX*sizeof(int16_t)*3, sizeof(int16_t)*3) != QSPI_OK){
+			Error_Handler();
+		}
+		if(BSP_QSPI_Write(gyro, GYRO_ADD + INDEX*sizeof(float)*3, sizeof(float)*3) != QSPI_OK){
+			Error_Handler();
+		}
+		if(BSP_QSPI_Write(magneto, MAGNO_ADD + INDEX*sizeof(int16_t)*3, sizeof(int16_t)*3) != QSPI_OK){
+			Error_Handler();
+		}
+		// Increment INDEX and set wrap around to true (1)
+		INDEX++;
+		if (INDEX == 100){
+			if_wrap_around = 1;
+			INDEX = 0;
+		}
+	}
+  }
+  /* USER CODE END startReadSensors */
+}
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM6 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM6) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.

@@ -30,6 +30,8 @@ Drivers/BSP/B-L4S5I-IOT01/stm32l4s5i_iot01_gyro.o: \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_ospi.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr_ex.h \
+ ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim.h \
+ ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim_ex.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart_ex.h \
  ../Drivers/BSP/B-L4S5I-IOT01/../Components/lsm6dsl/lsm6dsl.h \
@@ -65,6 +67,8 @@ Drivers/BSP/B-L4S5I-IOT01/stm32l4s5i_iot01_gyro.o: \
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_ospi.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr_ex.h:
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim.h:
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim_ex.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart_ex.h:
 ../Drivers/BSP/B-L4S5I-IOT01/../Components/lsm6dsl/lsm6dsl.h:
