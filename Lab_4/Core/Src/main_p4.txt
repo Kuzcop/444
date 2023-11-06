@@ -76,7 +76,7 @@ uint8_t sensor = 0;
 uint8_t add_offset =0;
 uint8_t INDEX = 0;
 uint8_t if_wrap_around = 0;
-uint8_t size = 0;
+float size = 0;
 
 // Mean and variances
 float humidity_mean = 0;
@@ -159,7 +159,7 @@ int main(void)
   BSP_ACCELERO_Init();
   BSP_GYRO_Init();
   BSP_QSPI_Init();
-  
+
   HAL_GPIO_WritePin(errorLED_GPIO_Port, errorLED_Pin, GPIO_PIN_SET);
 
   if(BSP_QSPI_Erase_Block(0) != QSPI_OK){
@@ -185,23 +185,23 @@ int main(void)
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
-  defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
-
-  /* definition and creation of monitorPB */
-  osThreadDef(monitorPB, startMonitorPB, osPriorityNormal, 0, 128);
-  monitorPBHandle = osThreadCreate(osThread(monitorPB), NULL);
-
-  /* definition and creation of readSensors */
-  osThreadDef(readSensors, startReadSensors, osPriorityNormal, 0, 128);
-  readSensorsHandle = osThreadCreate(osThread(readSensors), NULL);
+//  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
+//  defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
+//
+//  /* definition and creation of monitorPB */
+//  osThreadDef(monitorPB, startMonitorPB, osPriorityNormal, 0, 128);
+//  monitorPBHandle = osThreadCreate(osThread(monitorPB), NULL);
+//
+//  /* definition and creation of readSensors */
+//  osThreadDef(readSensors, startReadSensors, osPriorityNormal, 0, 128);
+//  readSensorsHandle = osThreadCreate(osThread(readSensors), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
-  osKernelStart();
+  //osKernelStart();
 
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
@@ -212,6 +212,173 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
+
+	    humidity = BSP_HSENSOR_ReadHumidity();
+	  	BSP_ACCELERO_AccGetXYZ(accel);
+	  	BSP_GYRO_GetXYZ(gyro);
+	  	BSP_MAGNETO_GetXYZ(magneto);
+
+	  	//write the values into memory
+	  	if ((sensor != 4) && (INDEX <100)){
+	  		if(BSP_QSPI_Write(&humidity, HUMM_ADD + INDEX*sizeof(float), sizeof(float)) != QSPI_OK){
+	  			Error_Handler();
+	  		}
+	  		if(BSP_QSPI_Write(accel, ACCEL_ADD + INDEX*sizeof(int16_t)*3, sizeof(int16_t)*3) != QSPI_OK){
+	  			Error_Handler();
+	  		}
+	  		if(BSP_QSPI_Write(gyro, GYRO_ADD + INDEX*sizeof(float)*3, sizeof(float)*3) != QSPI_OK){
+	  			Error_Handler();
+	  		}
+	  		if(BSP_QSPI_Write(magneto, MAGNO_ADD + INDEX*sizeof(int16_t)*3, sizeof(int16_t)*3) != QSPI_OK){
+	  			Error_Handler();
+	  		}
+	  		// Increment INDEX and set wrap around to true (1) if INDEX reaches 100
+	  		INDEX++;
+	  	}
+
+
+	  	switch(sensor){
+	  		  	  case 0:
+	  		  		  memset(str_hum, '\0', sizeof(str_hum));
+	  		  		  snprintf(str_hum, 100, "The humidity is %d\n\r", (int16_t)humidity);
+	  			  	  HAL_UART_Transmit(&huart1, (uint8_t*) str_hum, sizeof(str_hum), HAL_MAX_DELAY);
+	  			  	  HAL_Delay(100);
+	  		  		  break;
+	  		  	  case 1:
+	  		  		  memset(str_hum, '\0', sizeof(str_hum));
+	  		  		  snprintf(str_hum, 100, "The accelerometer reports that: x = %d, y = %d, z = %d\n\r", accel[0], accel[1], accel[2]);
+	  			  	  HAL_UART_Transmit(&huart1, (uint8_t*) str_hum, sizeof(str_hum), HAL_MAX_DELAY);
+	  			  	  HAL_Delay(100);
+	  		  		  break;
+	  		  	  case 2:
+	  		  		  memset(str_hum, '\0', sizeof(str_hum));
+	  		  		  snprintf(str_hum, 100, "The gyroscope reports that: x = %d, y = %d, z = %d\n\r",(int16_t)gyro[0],(int16_t)gyro[1],(int16_t)gyro[2]);
+	  			  	  HAL_UART_Transmit(&huart1, (uint8_t*) str_hum, sizeof(str_hum), HAL_MAX_DELAY);
+	  			  	  HAL_Delay(100);
+	  		  		 break;
+	  		  	  case 3:
+	  		  		  memset(str_hum, '\0', sizeof(str_hum));
+	  		  		  snprintf(str_hum, 100, "The magnetometer reports: x = %d, y = %d, z = %d\n\r", magneto[0], magneto[1], magneto[2]);
+	  			  	  HAL_UART_Transmit(&huart1, (uint8_t*) str_hum, sizeof(str_hum), HAL_MAX_DELAY);
+	  			  	  HAL_Delay(100);
+	  		  		 break;
+	  		  	  case 4:
+	  		  		 size = (float)INDEX;
+
+	  		  		 humidity_mean = 0;
+	  	  			 memset(accel_mean, 0, sizeof(accel_mean));
+	  	  			 memset(gyro_mean, 0, sizeof(gyro_mean));
+	  	  			 memset(magneto_mean, 0, sizeof(magneto_mean));
+
+	  	  			 humidity_variance = 0;
+	  	  			 memset(accel_variance, 0, sizeof(accel_variance));
+	  	  			 memset(gyro_variance, 0, sizeof(gyro_variance));
+	  	  			 memset(magneto_variance, 0, sizeof(magneto_variance));
+
+	  	  			 memset(humidity_array, 0, sizeof(humidity_array));
+	  	  			 memset(accel_array, 0, sizeof(accel_array));
+	  	  			 memset(gyro_array, 0, sizeof(gyro_array));
+	  	  			 memset(magneto_array, 0, sizeof(magneto_array));
+
+
+	  		  		 if(BSP_QSPI_Read(humidity_array, HUMM_ADD, sizeof(float)*100)!= QSPI_OK){
+	  		  			 Error_Handler();
+	  		  		 }
+	  		  		 if(BSP_QSPI_Read(accel_array, ACCEL_ADD, sizeof(int16_t)*300)!= QSPI_OK){
+	  		  			  Error_Handler();
+	  		  		 }
+	  		  		 if(BSP_QSPI_Read(gyro_array, GYRO_ADD, sizeof(float)*300)!= QSPI_OK){
+	  		  			 Error_Handler();
+	  		  		 }
+	  		  		 if(BSP_QSPI_Read(magneto_array, MAGNO_ADD, sizeof(int16_t)*300)!= QSPI_OK){
+	  		  			Error_Handler();
+	  		  		 }
+	  		  		 //mean
+	  		  		 for (int i = 0; i < size; i++){	// i refers to i'th sample
+	  		  			 humidity_mean += (humidity_array[i])/size;
+
+	  		  			 accel_mean[0] += (float) accel_array[i*3];
+	  		  			 accel_mean[1] += (float) accel_array[i*3 + 1];
+	  		  			 accel_mean[2] += (float) accel_array[i*3 + 2];
+
+	  		  			 gyro_mean[0] += (float) gyro_array[i*3];
+	  		  			 gyro_mean[1] += (float) gyro_array[i*3 + 1];
+	  		  			 gyro_mean[2] += (float) gyro_array[i*3 + 2];
+
+	  		  			 magneto_mean[0] += (float) magneto_array[i*3];
+	  		  			 magneto_mean[1] += (float) magneto_array[i*3 + 1];
+	  		  			 magneto_mean[2] += (float) magneto_array[i*3 + 2];
+	  		  		 }
+
+  		  			 accel_mean[0] /= size;
+  		  			 accel_mean[1] /= size;
+  		  			 accel_mean[2] /= size;
+
+  		  			 gyro_mean[0] /= size;
+  		  			 gyro_mean[1] /= size;
+  		  			 gyro_mean[2] /= size;
+
+  		  			 magneto_mean[0] /= size;
+  		  			 magneto_mean[1] /= size;
+  		  			 magneto_mean[2] /= size;
+
+	  		  		 // variance
+	  		  		 for (int i = 0; i < size; i++){	// i refers to i'th sample
+	  		  			 humidity_variance += ((humidity_array[i] - humidity_mean)*(humidity_array[i] - humidity_mean)) /size;
+
+	  		  			 accel_variance[0] += ((accel_array[i*3]     - accel_mean[0])*(accel_array[i*3]     - accel_mean[0])) /size;
+	  		  			 accel_variance[1] += ((accel_array[i*3 + 1] - accel_mean[1])*(accel_array[i*3 + 1] - accel_mean[1])) /size;
+	  		  			 accel_variance[2] += ((accel_array[i*3 + 2] - accel_mean[2])*(accel_array[i*3 + 2] - accel_mean[2])) /size;
+
+	  		  			 gyro_variance[0] += ((gyro_array[i*3]         - gyro_mean[0])*(gyro_array[i*3]         - gyro_mean[0])) /size;
+	  		  			 gyro_variance[1] += ((gyro_array[i*3 + 1]     - gyro_mean[1])*(gyro_array[i*3 + 1]     - gyro_mean[1])) /size;
+	  		  			 gyro_variance[2] += ((gyro_array[i*3 + 2]     - gyro_mean[2])*(gyro_array[i*3 + 2]     - gyro_mean[2])) /size;
+
+	  		  			 magneto_variance[0] += ((magneto_array[i*3]     - magneto_mean[0])*(magneto_array[i*3]     - magneto_mean[0])) /size;
+	  		  			 magneto_variance[1] += ((magneto_array[i*3 + 1] - magneto_mean[1])*(magneto_array[i*3 + 1] - magneto_mean[1])) /size;
+	  		  			 magneto_variance[2] += ((magneto_array[i*3 + 2] - magneto_mean[2])*(magneto_array[i*3 + 2] - magneto_mean[2])) /size;
+	  		  		 }
+
+//  		  			 accel_variance[0] /= size;
+//  		  			 accel_variance[1] /= size;
+//  		  			 accel_variance[2] /= size;
+//
+//  		  			 gyro_variance[0] /= size;
+//  		  			 gyro_variance[1] /= size;
+//  		  			 gyro_variance[2] /= size;
+//
+//  		  			 magneto_variance[0] /= size;
+//  		  			 magneto_variance[1] /= size;
+//  		  			 magneto_variance[2] /= size;
+
+	  		  		 memset(str_hum, '\0', sizeof(str_hum));
+	  		  		 snprintf(str_hum, 100, "Number of Samples: %d\n\r", (int16_t) INDEX);
+	  		  		 HAL_UART_Transmit(&huart1, (uint8_t*) str_hum, sizeof(str_hum), HAL_MAX_DELAY);
+	  		  		 HAL_Delay(1000);
+
+	  		  		 memset(str_hum, '\0', sizeof(str_hum));
+	  		  		 snprintf(str_hum, 100, "Humidity Mean: %d, Humidity Variance %d\n\r", (int16_t) humidity_mean, (int16_t) humidity_variance);
+	  		  		 HAL_UART_Transmit(&huart1, (uint8_t*) str_hum, sizeof(str_hum), HAL_MAX_DELAY);
+	  		  		 HAL_Delay(1000);
+
+	  		  		 memset(str_hum, '\0', sizeof(str_hum));
+	  		  		 snprintf(str_hum, 100, "Accelerometer  Mean-> x: %d y: %d z: %d, Accelerometer Variance-> x: %d y: %d z: %d\n\r", (int16_t) accel_mean[0], (int16_t) accel_mean[1], (int16_t) accel_mean[2], (int16_t) accel_variance[0], (int16_t) accel_variance[1], (int16_t) accel_variance[2]);
+	  		  		 HAL_UART_Transmit(&huart1, (uint8_t*) str_hum, sizeof(str_hum), HAL_MAX_DELAY);
+	  		  		 HAL_Delay(1000);
+
+	  		  		 memset(str_hum, '\0', sizeof(str_hum));
+	  		  		 snprintf(str_hum, 100, "Gyroscope  Mean-> x: %d y: %d z: %d, Gyroscope Variance-> x: %d y: %d z: %d\n\r", (int16_t) gyro_mean[0], (int16_t) gyro_mean[1], (int16_t) gyro_mean[2], (int16_t) gyro_variance[0], (int16_t) gyro_variance[1], (int16_t) gyro_variance[2]);
+	  		  		 HAL_UART_Transmit(&huart1, (uint8_t*) str_hum, sizeof(str_hum), HAL_MAX_DELAY);
+	  		  		 HAL_Delay(1000);
+
+	  		  		 memset(str_hum, '\0', sizeof(str_hum));
+	  		  		 snprintf(str_hum, 100, "Magnetometer  Mean-> x: %d y: %d z: %d, Magnetometer Variance-> x: %d y: %d z: %d\n\r", (int16_t) magneto_mean[0], (int16_t) magneto_mean[1], (int16_t) magneto_mean[2], (int16_t) magneto_variance[0], (int16_t) magneto_variance[1], (int16_t) magneto_variance[2]);
+	  		  		 HAL_UART_Transmit(&huart1, (uint8_t*) str_hum, sizeof(str_hum), HAL_MAX_DELAY);
+	  		  		 HAL_Delay(1000);
+
+	  		  		 break;
+	  		  	  default:
+	  	}
   }
   /* USER CODE END 3 */
 }
@@ -490,8 +657,6 @@ void StartDefaultTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-	  osDelay(1000);
-	  HAL_UART_Transmit(&huart1, (uint8_t*) str_hum, sizeof(str_hum), HAL_MAX_DELAY);
   }
   /* USER CODE END 5 */
 }
@@ -509,144 +674,8 @@ void startMonitorPB(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-	  osDelay(1);
-	  	switch(sensor){
-	  		  	  case 0:
-	  		  		  memset(str_hum, '\0', sizeof(str_hum));
-	  		  		  snprintf(str_hum, 100, "The humidity is %d\n\r", (int16_t)humidity);
-//	  			  	  HAL_UART_Transmit(&huart1, (uint8_t*) str_hum, sizeof(str_hum), HAL_MAX_DELAY);
-//	  			  	  HAL_Delay(100);
-	  		  		  osDelay(100);
-	  		  		  break;
-	  		  	  case 1:
-	  		  		  memset(str_hum, '\0', sizeof(str_hum));
-	  		  		  snprintf(str_hum, 100, "The accelerometer reports that: x = %d, y = %d, z = %d\n\r", accel[0], accel[1], accel[2]);
-	  		  		  osDelay(100);
-	  		  		  break;
-	  		  	  case 2:
-	  		  		  memset(str_hum, '\0', sizeof(str_hum));
-	  		  		  snprintf(str_hum, 100, "The gyroscope reports that: x = %d, y = %d, z = %d\n\r",(int16_t)gyro[0],(int16_t)gyro[1],(int16_t)gyro[2]);
-	  		  		  osDelay(100);
-	  		  		 break;
-	  		  	  case 3:
-	  		  		  memset(str_hum, '\0', sizeof(str_hum));
-	  		  		  snprintf(str_hum, 100, "The magnetometer reports: x = %d, y = %d, z = %d\n\r", magneto[0], magneto[1], magneto[2]);
-	  		  		  osDelay(100);
-	  		  		 break;
-	  		  	  case 4:
-	  		  		 size = (float)INDEX;
-
-	  		  		 humidity_mean = 0;
-	  	  			 memset(accel_mean, 0, sizeof(accel_mean));
-	  	  			 memset(gyro_mean, 0, sizeof(gyro_mean));
-	  	  			 memset(magneto_mean, 0, sizeof(magneto_mean));
-
-	  	  			 humidity_variance = 0;
-	  	  			 memset(accel_variance, 0, sizeof(accel_variance));
-	  	  			 memset(gyro_variance, 0, sizeof(gyro_variance));
-	  	  			 memset(magneto_variance, 0, sizeof(magneto_variance));
-
-	  	  			 memset(humidity_array, 0, sizeof(humidity_array));
-	  	  			 memset(accel_array, 0, sizeof(accel_array));
-	  	  			 memset(gyro_array, 0, sizeof(gyro_array));
-	  	  			 memset(magneto_array, 0, sizeof(magneto_array));
 
 
-	  		  		 if(BSP_QSPI_Read(humidity_array, HUMM_ADD, sizeof(float)*100)!= QSPI_OK){
-	  		  			 Error_Handler();
-	  		  		 }
-	  		  		 if(BSP_QSPI_Read(accel_array, ACCEL_ADD, sizeof(int16_t)*300)!= QSPI_OK){
-	  		  			  Error_Handler();
-	  		  		 }
-	  		  		 if(BSP_QSPI_Read(gyro_array, GYRO_ADD, sizeof(float)*300)!= QSPI_OK){
-	  		  			 Error_Handler();
-	  		  		 }
-	  		  		 if(BSP_QSPI_Read(magneto_array, MAGNO_ADD, sizeof(int16_t)*300)!= QSPI_OK){
-	  		  			Error_Handler();
-	  		  		 }
-	  		  		 //mean
-	  		  		 for (int i = 0; i < size; i++){	// i refers to i'th sample
-	  		  			 humidity_mean += (humidity_array[i])/size;
-
-	  		  			 accel_mean[0] += (float) accel_array[i*3];
-	  		  			 accel_mean[1] += (float) accel_array[i*3 + 1];
-	  		  			 accel_mean[2] += (float) accel_array[i*3 + 2];
-
-	  		  			 gyro_mean[0] += (float) gyro_array[i*3];
-	  		  			 gyro_mean[1] += (float) gyro_array[i*3 + 1];
-	  		  			 gyro_mean[2] += (float) gyro_array[i*3 + 2];
-
-	  		  			 magneto_mean[0] += (float) magneto_array[i*3];
-	  		  			 magneto_mean[1] += (float) magneto_array[i*3 + 1];
-	  		  			 magneto_mean[2] += (float) magneto_array[i*3 + 2];
-	  		  		 }
-
-		  			 accel_mean[0] /= size;
-		  			 accel_mean[1] /= size;
-		  			 accel_mean[2] /= size;
-
-		  			 gyro_mean[0] /= size;
-		  			 gyro_mean[1] /= size;
-		  			 gyro_mean[2] /= size;
-
-		  			 magneto_mean[0] /= size;
-		  			 magneto_mean[1] /= size;
-		  			 magneto_mean[2] /= size;
-
-	  		  		 // variance
-	  		  		 for (int i = 0; i < size; i++){	// i refers to i'th sample
-	  		  			 humidity_variance += ((humidity_array[i] - humidity_mean)*(humidity_array[i] - humidity_mean)) /size;
-
-	  		  			 accel_variance[0] += ((accel_array[i*3]     - accel_mean[0])*(accel_array[i*3]     - accel_mean[0])) /size;
-	  		  			 accel_variance[1] += ((accel_array[i*3 + 1] - accel_mean[1])*(accel_array[i*3 + 1] - accel_mean[1])) /size;
-	  		  			 accel_variance[2] += ((accel_array[i*3 + 2] - accel_mean[2])*(accel_array[i*3 + 2] - accel_mean[2])) /size;
-
-	  		  			 gyro_variance[0] += ((gyro_array[i*3]         - gyro_mean[0])*(gyro_array[i*3]         - gyro_mean[0])) /size;
-	  		  			 gyro_variance[1] += ((gyro_array[i*3 + 1]     - gyro_mean[1])*(gyro_array[i*3 + 1]     - gyro_mean[1])) /size;
-	  		  			 gyro_variance[2] += ((gyro_array[i*3 + 2]     - gyro_mean[2])*(gyro_array[i*3 + 2]     - gyro_mean[2])) /size;
-
-	  		  			 magneto_variance[0] += ((magneto_array[i*3]     - magneto_mean[0])*(magneto_array[i*3]     - magneto_mean[0])) /size;
-	  		  			 magneto_variance[1] += ((magneto_array[i*3 + 1] - magneto_mean[1])*(magneto_array[i*3 + 1] - magneto_mean[1])) /size;
-	  		  			 magneto_variance[2] += ((magneto_array[i*3 + 2] - magneto_mean[2])*(magneto_array[i*3 + 2] - magneto_mean[2])) /size;
-	  		  		 }
-
-//  		  			 accel_variance[0] /= size;
-//  		  			 accel_variance[1] /= size;
-//  		  			 accel_variance[2] /= size;
-//
-//  		  			 gyro_variance[0] /= size;
-//  		  			 gyro_variance[1] /= size;
-//  		  			 gyro_variance[2] /= size;
-//
-//  		  			 magneto_variance[0] /= size;
-//  		  			 magneto_variance[1] /= size;
-//  		  			 magneto_variance[2] /= size;
-
-	  		  		 memset(str_hum, '\0', sizeof(str_hum));
-	  		  		 snprintf(str_hum, 100, "Number of Samples: %d\n\r", (int16_t) INDEX);
-//	  		  		 HAL_UART_Transmit(&huart1, (uint8_t*) str_hum, sizeof(str_hum), HAL_MAX_DELAY);
-//	  		  		 HAL_Delay(1000);
-	  		  		 osDelay(1000);
-
-	  		  		 memset(str_hum, '\0', sizeof(str_hum));
-	  		  		 snprintf(str_hum, 100, "Humidity Mean: %d, Humidity Variance %d\n\r", (int16_t) humidity_mean, (int16_t) humidity_variance);
-	  		  		 osDelay(1000);
-
-	  		  		 memset(str_hum, '\0', sizeof(str_hum));
-	  		  		 snprintf(str_hum, 100, "Accelerometer  Mean-> x: %d y: %d z: %d, Accelerometer Variance-> x: %d y: %d z: %d\n\r", (int16_t) accel_mean[0], (int16_t) accel_mean[1], (int16_t) accel_mean[2], (int16_t) accel_variance[0], (int16_t) accel_variance[1], (int16_t) accel_variance[2]);
-	  		  		 osDelay(1000);
-
-	  		  		 memset(str_hum, '\0', sizeof(str_hum));
-	  		  		 snprintf(str_hum, 100, "Gyroscope  Mean-> x: %d y: %d z: %d, Gyroscope Variance-> x: %d y: %d z: %d\n\r", (int16_t) gyro_mean[0], (int16_t) gyro_mean[1], (int16_t) gyro_mean[2], (int16_t) gyro_variance[0], (int16_t) gyro_variance[1], (int16_t) gyro_variance[2]);
-	  		  		 osDelay(1000);
-
-	  		  		 memset(str_hum, '\0', sizeof(str_hum));
-	  		  		 snprintf(str_hum, 100, "Magnetometer  Mean-> x: %d y: %d z: %d, Magnetometer Variance-> x: %d y: %d z: %d\n\r", (int16_t) magneto_mean[0], (int16_t) magneto_mean[1], (int16_t) magneto_mean[2], (int16_t) magneto_variance[0], (int16_t) magneto_variance[1], (int16_t) magneto_variance[2]);
-	  		  		 osDelay(1000);
-
-	  		  		 break;
-	  		  	  default:
-	  	}
   }
   /* USER CODE END startMonitorPB */
 }
@@ -664,29 +693,8 @@ void startReadSensors(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-	osDelay(100);
-	humidity = BSP_HSENSOR_ReadHumidity();
-	BSP_ACCELERO_AccGetXYZ(accel);
-	BSP_GYRO_GetXYZ(gyro);
-	BSP_MAGNETO_GetXYZ(magneto);
 
-	//write the values into memory
-  	if ((sensor != 4) && (INDEX <100)){
-  		if(BSP_QSPI_Write(&humidity, HUMM_ADD + INDEX*sizeof(float), sizeof(float)) != QSPI_OK){
-  			Error_Handler();
-  		}
-  		if(BSP_QSPI_Write(accel, ACCEL_ADD + INDEX*sizeof(int16_t)*3, sizeof(int16_t)*3) != QSPI_OK){
-  			Error_Handler();
-  		}
-  		if(BSP_QSPI_Write(gyro, GYRO_ADD + INDEX*sizeof(float)*3, sizeof(float)*3) != QSPI_OK){
-  			Error_Handler();
-  		}
-  		if(BSP_QSPI_Write(magneto, MAGNO_ADD + INDEX*sizeof(int16_t)*3, sizeof(int16_t)*3) != QSPI_OK){
-  			Error_Handler();
-  		}
-  		// Increment INDEX and set wrap around to true (1) if INDEX reaches 100
-  		INDEX++;
-  	}
+
   }
   /* USER CODE END startReadSensors */
 }
